@@ -1,6 +1,6 @@
 module.exports = function CliFunctions(Cli, Hive){
   // our important data
-  let delimiter = "hive:0.0.1$";
+  let delimiter = `${process.env.npm_package_name}$`;
   const Vorpal = Cli;
   let functions = {};
 
@@ -10,7 +10,6 @@ module.exports = function CliFunctions(Cli, Hive){
   // after the auth process from the Hive.Remote module, we'll run the callback
   functions.authenticationPrompt = function(args, callback){
     const self = this;
-    args.host = "http://localhost:5000";
     Hive.remote.ping(args.host, function(canConnect){
       if(!canConnect){
         callback("unable to connect to host");

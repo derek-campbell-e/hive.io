@@ -1,7 +1,7 @@
 module.exports = function CLI(Hive){
   // our includes
   const vorpal = require('vorpal')();
-  let delimiter = "hive:0.0.1$";
+  let delimiter = `${process.env.npm_package_name}$`;
   let numberOfLoginAttempts = 0;
 
   // our functions module
@@ -79,12 +79,12 @@ module.exports = function CLI(Hive){
     .action(functions.disconnectRemoteHostCLI);
   
   vorpal
-    .command("remote [host]")
+    .command("remote <host>")
     .description("remote into a host!")
     .action(functions.remoteIntoHive);
   
   vorpal
-    .command("repl [host]")
+    .command("repl <host>")
     .description("replicate drones and settings to another hive")
     .action(functions.replicateIntoHive);
 

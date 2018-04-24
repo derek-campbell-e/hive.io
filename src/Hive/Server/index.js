@@ -13,6 +13,7 @@ module.exports = function Server(Hive){
 
   // our token authentication module
   let tokenAuth = require('./token')();
+  server.token = tokenAuth;
   
   // our logger middleware for express
   let loggerMiddleWare = function(req, res, next){

@@ -6,16 +6,36 @@ module.exports = function Socket(Hive, Server, Cli){
 
   // our socket manager object
   let sm = common.object('hive', 'socket-manager');
+
+  let tokenSymbol = Symbol("token");
   
   // TODO: socket authentication middleware
+
+  let socketAuthentication = function(socket, next){
+    let token = socket.handshake.query.token;
+    Server.token.verify(token, function(error, data){
+      if(!error){
+        socket[tokenSymbol] = token;
+        return next();
+      }
+      return next(new Error("Not authenticated"));
+    });
+  };
+
+  let socketVerifyPerPacket = function(socket, packet, next){
+    Server.token.verify(socket[tokenSymbol], function(error, data){
+      if(!error){
+        return next();
+      }
+      return next(new Error("Not authenticated"));
+    });
+  };
 
   // our key/symbol map for socket events, we dont want
   // socket events to be called by anyone, though this may prove insecure
   let events = {
     'stats': Symbol('stats'),
     'disconnect': Symbol('socketDisconnect'),
-    //'replication:begin': Symbol('replicationBegin'),
-    //'replication:complete': Symbol('replicationComplete'),
     'begin:replication': Symbol("beginReplication"),
     'replication:data': Symbol("replicationData"),
     'remote:command': Symbol('remoteCommand'),
@@ -23,13 +43,17 @@ module.exports = function Socket(Hive, Server, Cli){
 
   // our binder to listen to socket events by key and run the function by symbol
   let socketBinder = function(socket){
+    socket.use(socketVerifyPerPacket.bind(sm, socket));
     for(let eventKey in events){
       let funcSymbol = events[eventKey];
       if(typeof sm[funcSymbol] !== 'function'){
         debug("not a function");
         continue;
       }
-      socket.on(eventKey, sm[funcSymbol].bind(sm, socket));
+      socket.on(eventKey, function(){
+        sm.log(`received socket event: ${eventKey} from: ${socket.id}`);
+        sm[funcSymbol].apply(sm, [socket, ...arguments]);
+      });
     }
   };
 
@@ -50,6 +74,7 @@ module.exports = function Socket(Hive, Server, Cli){
 
   // this will fire on the LOCAL HIVE when a REMOTE hive is connected to this LOCAL hive and enters a command
   sm[events['remote:command']] = function(socket, command, args, callback){
+    sm.log(`received remote command: '${command}' with args: ${args}`);
     Hive.emit(command, args, callback);
   };
 
@@ -68,10 +93,11 @@ module.exports = function Socket(Hive, Server, Cli){
   // listen to io events
   let bind = function(){
     io.on('connection', function(socket){
-      sm.log("got a socket connection///");
+      sm.log("new socket: ", socket.id, socket.handshake.address, socket.handshake.headers["x-real-ip"]);
       activeSockets[socket.id] = socket;
       socketBinder(socket);
     });
+    io.use(socketAuthentication);
   };
 
   // our initializer

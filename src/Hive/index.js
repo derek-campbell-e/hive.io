@@ -4,10 +4,11 @@ module.exports = function Hive(Options){
   const debug = require('debug')('hive');
   const options = common.options(Options);
   global['options'] = options; 
-  debug("running hive with options", options);
+  
 
   let hive = common.object('hive');
   hive.options = options;
+  hive.log("running hive with options", options);
   let remoteManager = require('./Remote')(hive);
   hive.remote = remoteManager;
 
