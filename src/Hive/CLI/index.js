@@ -53,6 +53,11 @@ module.exports = function CLI(Hive){
     .action(functions.emitter('stop:drones'));
 
   vorpal
+    .command("fire drone <mind>")
+    .description("run a drone immediately")
+    .action(functions.emitter('fire:drone'));
+  
+  vorpal
     .command("retire drone <mind>")
     .description("retire drone with <mind>")
     .action(functions.emitter('retire:drone'));

@@ -243,4 +243,17 @@ module.exports = function(Hive, Queen, Bees, Locator, Cache){
     drone.occurences(args, callback);
   };
 
+  Queen.fireDrone = function(args, callback){
+    let cachedMindName = Locator.searchMinds(args.mind);
+    if(!cachedMindName){
+      return callback(`no drone exists by that name ${args.mind}`, false);
+    }
+    let cachedMind = Cache.drones[cachedMindName];
+    if(!cachedMind.instance && !args.options.spawn){
+      return callback("drone must be spawned first...", false);
+    }
+    let drone = Bees[cachedMind.instance];
+    drone.fire(args, callback);
+  };
+
 };

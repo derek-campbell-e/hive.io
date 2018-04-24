@@ -49,8 +49,9 @@ module.exports = function Drone(Hive, Mind){
 
   // private function that gets bound to a timer, this gets executed when a timer fires
   let createBoundedFunction = function(scheduleKey, callback){
+    callback = callback || function(){};
     // the function to return
-    let func = function(drone, scheduleKey, ...args){
+    let func = function(drone, scheduleKey, callback, ...args){
       if(!drone.canStartNewThread()){
         return false;
       }
@@ -69,10 +70,11 @@ module.exports = function Drone(Hive, Mind){
       worker.start(function(){
         drone.threads[worker.meta.id] = null;
         delete drone.threads[worker.meta.id];
+        callback.apply(callback, arguments);
       });
     };
     // return this function with the proper stuff bound to it
-    return func.bind(drone, drone, scheduleKey);
+    return func.bind(drone, drone, scheduleKey, callback);
   };
 
   let formatLaterTime = function(time){
@@ -99,7 +101,10 @@ module.exports = function Drone(Hive, Mind){
     drone.unschedule();
   };
 
+  // returns a json with the next occurrences that the drone will fire
+  // change number of occurrences with args.number
   drone.occurences = function(args, callback){
+    callback = callback || function(){};
     let json = {};
     args.number = parseInt(args.number) || 1;
     for(let scheduleKey in drone.schedules){
@@ -121,6 +126,7 @@ module.exports = function Drone(Hive, Mind){
       json[scheduleKey] = meta;
     }
     callback(json);
+    return json;
   };
 
   // our function to create the timers that fire our function that creates a worker
@@ -220,8 +226,18 @@ module.exports = function Drone(Hive, Mind){
 
   // this function should run the drone immediately returning the worker's result
   // TODO: all
-  drone.fire = function(){
+  drone.fire = function(args, callback){
+    let boundedFunction = createBoundedFunction('fire', function(){
+      callback(common.stdFormatter.apply(common, arguments));
+    });
+    boundedFunction();
+  };
 
+
+  drone.export = function(){
+    let meta = require('extend')(true, {}, drone.meta);
+    meta.occurences = drone.occurences({number: 5});
+    return meta;
   };
 
   // our binding function to listen to events
