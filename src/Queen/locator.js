@@ -10,7 +10,7 @@ module.exports = function Locator(Queen, Cache){
 
   // cache the drone file / folder found
   loc.cacheMeta = function(droneMindFile){
-    debug(droneMindFile);
+    Queen.log(droneMindFile);
     let droneMind = path.basename(droneMindFile, '.js');
     let meta = {}
     meta.name = droneMind;
@@ -34,7 +34,7 @@ module.exports = function Locator(Queen, Cache){
     globOptions.realpath = true;
     glob(["*/", "*.js"], globOptions, function(error, droneMinds){
       if(error){
-        debug("an error occured building cache", error);
+        Queen.log("an error occured building cache", error);
         throw error;
         return false;
       }

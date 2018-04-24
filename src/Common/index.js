@@ -8,6 +8,7 @@ module.exports = function CommonTools(){
   common.makeLogger = require('./makeLogger');
   common.timestamp = require('./timestamp');
   common.options = require('./options');
+  common.timeformat = require('./timeFormat');
 
   return common;
 }();

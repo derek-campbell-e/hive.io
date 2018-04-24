@@ -1,6 +1,6 @@
 module.exports = function CliFunctions(Cli, Hive){
   // our important data
-  let delimiter = `${process.env.npm_package_name}$`;
+  let delimiter = `hive.io$`;
   const Vorpal = Cli;
   let functions = {};
 

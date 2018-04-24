@@ -4,7 +4,7 @@ module.exports = function(Hive, Queen, Bees, Locator, Cache){
 
   // spawn a drone with <mind>
   Queen.spawnDrone = function(args, callback){
-    debug("spawning drone with mind", args.mind);
+    Queen.log("spawning drone with mind", args.mind);
     let cachedMindName = Locator.searchMinds(args.mind);
     if(!cachedMindName){
       return callback(`no drone exists by that name ${args.mind}`, false);
@@ -53,17 +53,17 @@ module.exports = function(Hive, Queen, Bees, Locator, Cache){
       options.loadDrones = [options.loadDrones];
     }
     if(options.loadAllDrones){
-      debug("load all drones option");
+      Queen.log("load all drones option");
       options.loadDrones = Object.keys(Cache.drones);
     }
-    debug("loading the drones listed in startup", options.loadDrones, Cache);
+    Queen.log("loading the drones listed in startup", options.loadDrones, Cache);
     Queen.log("spawning startup drones...", options.loadDrones);
     let spawnedDrones = [];
     for(let droneIndex in options.loadDrones){
       let droneMind = options.loadDrones[droneIndex];
       let cachedMindName = Locator.searchMinds(droneMind);
       if(!cachedMindName){
-        debug("no drone found by that name...");
+        Queen.log("no drone found by that name...");
         Queen.log("no drone mind found with name", droneMind);
         continue;
       }
@@ -79,12 +79,12 @@ module.exports = function(Hive, Queen, Bees, Locator, Cache){
   // then start them here
   Queen.startStartupDrones = function(spawnedDrones){
     if(!options.startDronesOnLoad){
-      debug("dont start em...");
+      Queen.log("dont start em...");
       return;
     }
     for(let droneIndex in spawnedDrones){
       let drone = spawnedDrones[droneIndex];
-      debug('starting drone...',drone.meta.debugName());
+      Queen.log('starting drone...',drone.meta.debugName());
       Queen.log("starting drone", drone.meta.debugName());
       drone.start();
     }
@@ -228,6 +228,19 @@ module.exports = function(Hive, Queen, Bees, Locator, Cache){
       });
     };
     loop();
+  };
+
+  Queen.nextDroneFire = function(args, callback){
+    let cachedMindName = Locator.searchMinds(args.mind);
+    if(!cachedMindName){
+      return callback(`no drone exists by that name ${args.mind}`, false);
+    }
+    let cachedMind = Cache.drones[cachedMindName];
+    if(!cachedMind.instance && !args.options.spawn){
+      return callback("drone must be spawned first...", false);
+    }
+    let drone = Bees[cachedMind.instance];
+    drone.occurences(args, callback);
   };
 
 };

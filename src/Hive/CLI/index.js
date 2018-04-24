@@ -1,7 +1,7 @@
 module.exports = function CLI(Hive){
   // our includes
   const vorpal = require('vorpal')();
-  let delimiter = `${process.env.npm_package_name}$`;
+  let delimiter = `hive.io$`;
   let numberOfLoginAttempts = 0;
 
   // our functions module
@@ -62,6 +62,11 @@ module.exports = function CLI(Hive){
     .description("retire drone with <mind>")
     .option('-a, --all', 'retire all drones found by the queen')
     .action(functions.emitter('retire:drones'));
+  
+  vorpal
+    .command("next <mind> [number]")
+    .description("show the next fire times for <drone>")
+    .action(functions.emitter('next:drone'))
   
   vorpal
     .command("reload")

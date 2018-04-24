@@ -30,7 +30,8 @@ module.exports = function Queen(Hive, Bees){
     'stop:drones': 'stopDrones',
     'retire:drone': 'retireDrone',
     'retire:drones': 'retireDrones',
-    'ls:drones': 'listDrones'
+    'ls:drones': 'listDrones',
+    'next:drone': 'nextDroneFire'
   };
 
   // our stats object

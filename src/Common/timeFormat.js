@@ -1,0 +1,1 @@
+module.exports = 'DD/MMM/YYYY:HH:mm:ss ZZ';

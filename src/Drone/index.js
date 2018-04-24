@@ -1,7 +1,9 @@
 module.exports = function Drone(Hive, Mind){
   // our includes
+  const common = require('../Common');
   const debug = require('debug')('drone:base');
   const later = require('later');
+  later.date.localTime();
 
   // the returned drone object
   let drone = require('../Bee')(Hive, 'drone');
@@ -73,6 +75,10 @@ module.exports = function Drone(Hive, Mind){
     return func.bind(drone, drone, scheduleKey);
   };
 
+  let formatLaterTime = function(time){
+    return require('moment')(time).format(common.timeformat);
+  };
+
   // function to decide if we should start a new thread
   // to set max threads, in the drone mind, create a property of 
   // mind.maxThreads = [Int]
@@ -93,6 +99,30 @@ module.exports = function Drone(Hive, Mind){
     drone.unschedule();
   };
 
+  drone.occurences = function(args, callback){
+    let json = {};
+    args.number = parseInt(args.number) || 1;
+    for(let scheduleKey in drone.schedules){
+      let schedule = drone.schedules[scheduleKey];
+      let meta = {};
+      switch(schedule.type){
+        case 'on':
+          meta.next = ['indeterminate'];
+        break;
+        default:
+          meta.next = [...later.schedule(schedule.parsed).next(args.number)];
+          for(let index in meta.next){
+            let next = meta.next[index];
+            meta.next[index] = formatLaterTime(next);
+          }
+        break;
+
+      }
+      json[scheduleKey] = meta;
+    }
+    callback(json);
+  };
+
   // our function to create the timers that fire our function that creates a worker
   // we can use different types of timers for our needs
   // hz: run every [Int] milliseconds
@@ -107,11 +137,15 @@ module.exports = function Drone(Hive, Mind){
     let boundedFunction = createBoundedFunction(scheduleKey);
     switch(scheduleType){
       case 'hz':
-        schedule = setInterval(boundedFunction, scheduleValue);
-        clearSchedule = clearInterval.bind(clearInterval, schedule);
+        parsed = later.parse.recur().every(scheduleValue).second();
+        schedule = later.setInterval(boundedFunction, parsed);
+        clearSchedule = schedule.clear.bind(schedule);
       break;
       case 'later':
         parsed = later.parse.text(scheduleValue);
+        if(parsed.error > -1){
+          drone.error("an error occured creating text-based schedule", scheduleValue, 'on char', parsed.error);
+        }
         schedule = later.setInterval(boundedFunction, parsed);
         clearSchedule = schedule.clear.bind(schedule);
       break;
@@ -126,8 +160,10 @@ module.exports = function Drone(Hive, Mind){
       break;
     }
     let scheduledObject = {
+      type: scheduleType,
       interval: schedule,
-      clearInterval: clearSchedule
+      clearInterval: clearSchedule,
+      parsed: parsed,
     };
     return scheduledObject;
   };
@@ -198,7 +234,7 @@ module.exports = function Drone(Hive, Mind){
     bind();
     loadMind();
     drone.spawn();
-    debug("initializing a new drone...");
+    drone.log("initializing a new drone...");
     drone.log("entering the hive...");
     return drone;
   };
