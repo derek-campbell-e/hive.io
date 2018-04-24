@@ -1,4 +1,6 @@
 module.exports = function ServerRoutes(Hive, Server, App, TokenAuth){
+
+  // our base URI
   App.get("/", function(req, res){
     res.send("HELLO");
   });

@@ -1,11 +1,21 @@
 module.exports = function Queen(Hive, Bees){
+  // our includes
   const common = require('../Common');
   const debug = require('debug')('queen:base');
+  
+  // our returned queen object
   let queen = require('../Bee')(Hive, 'queen');
+
+  // our cache for drones where we hold drones found in process.cwd() for later spawning
   let cache = {};
   cache.drones = {};
+
+  // our locator module to locate drones found in process.cwd() and apply to our cache
   let locator = require('./locator')(queen, cache);
 
+  // our key/function map of events that we'll listen to the hive for
+  // this is how we do most of our CLI work, we'll tell the hive to emit the command
+  // and the queen runs when the event key gets fired
   let events = {
     'bee:spawn': 'addActiveBee',
     'bee:retire': 'removeActiveBee',
@@ -23,6 +33,7 @@ module.exports = function Queen(Hive, Bees){
     'ls:drones': 'listDrones'
   };
 
+  // our stats object
   let stats = {};
   stats.beesSpawned = [];
   stats.beesRetired = [];
@@ -34,12 +45,19 @@ module.exports = function Queen(Hive, Bees){
   stats.totalSpawned = 1; // include queen
   stats.totalRetired = 0;
 
+  // assign it to our queen
   queen.meta.stats = stats;
 
+  // our helpers
+  // drone functions help us spawn, start, retire, fire drones
   require('./droneFunctions')(Hive, queen, Bees, locator, cache);
+
+  // our stat functions will help us create metrics and such
   require('./statFunctions')(Hive, queen, Bees, locator, cache, stats);
 
-
+  // this function runs when the hive emits 'bee:spawn'
+  // we'll add a bee to our Bees object
+  // and update our stats
   queen.addActiveBee = function(bee){
     Bees[bee.meta.id] = bee;
     let beeID = bee.meta.id;
@@ -67,6 +85,8 @@ module.exports = function Queen(Hive, Bees){
     stats.totalSpawned ++;
   };
 
+  // this function runs when the hive emits 'bee:retire'
+  // here we'll remove the bee from our Bees and update stats
   queen.removeActiveBee = function(bee){
     let activeReference = null;
     let beeID = bee.meta.id;
@@ -96,6 +116,7 @@ module.exports = function Queen(Hive, Bees){
     stats.totalRetired ++;
   };
 
+  // our garbage collection function where we stop listening to the hive events
   queen.gc = function(){
     for(let eventKey in events){
       let funcName = events[eventKey];
@@ -104,6 +125,8 @@ module.exports = function Queen(Hive, Bees){
     }
   };
 
+  // runs when the hive emits "stats"
+  // return the hive stats
   queen.stats = function(args, callback){
     callback = callback || function(){};
     let json = {};
@@ -122,23 +145,22 @@ module.exports = function Queen(Hive, Bees){
     return json;
   };
 
-  queen.testDrone = function(args, callback){
-    let drone = require('../Drone')(Hive);
-    callback();
-  };
-
+  // this function builds our cache
   queen.buildCache = function(callback){
     callback = callback || function(){};
     queen.log("building cache...");
     locator.buildCache(callback);
   };
 
+  // this function rebuilds the cache
   queen.rebuildCache = function(callback){
     callback = callback || function(){};
     queen.log("rebuilding cache...");
     locator.rebuildCache(callback);
   };
 
+  // this function is called after the hive emits a "reload" event
+  // we rebuild our cache and the active drones do their own reloading
   queen.reload = function(args, callback){
     //console.log(this, cli);
     queen.rebuildCache();
@@ -146,6 +168,8 @@ module.exports = function Queen(Hive, Bees){
     callback();
   };
 
+  // ran when the hive emits "ls:drones"
+  // we'll list the drones found in our cache along with their metadata
   queen.listDrones = function(args, callback){
     let json = {};
     for(let droneMind in cache.drones){
@@ -161,6 +185,7 @@ module.exports = function Queen(Hive, Bees){
     callback(json, "here are your drones mf");
   };
 
+  // our binding function to listen to hive events
   let bind = function(){
     for(let eventKey in events){
       let funcName = events[eventKey];
@@ -169,6 +194,7 @@ module.exports = function Queen(Hive, Bees){
     }
   };
 
+  // our initializer
   let init = function(){
     bind();
     queen.buildCache(queen.loadStartupDrones);

@@ -1,10 +1,16 @@
 module.exports = function Socket(Hive, Server, Cli){
+  // our includes
   const debug = require('debug')('hive:server');
   const common = require('../../Common');
   const io = require('socket.io')(Server.http);
 
+  // our socket manager object
   let sm = common.object('hive', 'socket-manager');
+  
+  // TODO: socket authentication middleware
 
+  // our key/symbol map for socket events, we dont want
+  // socket events to be called by anyone, though this may prove insecure
   let events = {
     'stats': Symbol('stats'),
     'disconnect': Symbol('socketDisconnect'),
@@ -15,6 +21,7 @@ module.exports = function Socket(Hive, Server, Cli){
     'remote:command': Symbol('remoteCommand'),
   };
 
+  // our binder to listen to socket events by key and run the function by symbol
   let socketBinder = function(socket){
     for(let eventKey in events){
       let funcSymbol = events[eventKey];
@@ -26,9 +33,8 @@ module.exports = function Socket(Hive, Server, Cli){
     }
   };
 
+  // our private sockets object
   let activeSockets = {};
-
-  sm.log("initializing socket manager");
 
   sm[events.stats] = function(socket, callback){
     sm.log("we got a stats message");
@@ -58,7 +64,8 @@ module.exports = function Socket(Hive, Server, Cli){
       socket.emit("complete:replication");
     });
   };
-
+  
+  // listen to io events
   let bind = function(){
     io.on('connection', function(socket){
       sm.log("got a socket connection///");
@@ -67,12 +74,12 @@ module.exports = function Socket(Hive, Server, Cli){
     });
   };
 
+  // our initializer
   let init = function(){
     bind();
+    sm.log("initializing socket manager");
     return sm;
   };
-
-  
 
   return init();
 };

@@ -4,6 +4,3 @@ let Hive = require('./src/Hive')({
   loadAllDrones: false
 });
 process.stdin.resume();
-setInterval(function(){
-  Hive.emit('send:text', 'I LOVE YA', '9512315340');
-}, 20000);

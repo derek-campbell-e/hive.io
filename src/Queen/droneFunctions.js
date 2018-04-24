@@ -1,7 +1,8 @@
 module.exports = function(Hive, Queen, Bees, Locator, Cache){
-  const common = require('../Common');
+  // our includes
   const debug = require('debug')('queen:base:dronefunction');
 
+  // spawn a drone with <mind>
   Queen.spawnDrone = function(args, callback){
     debug("spawning drone with mind", args.mind);
     let cachedMindName = Locator.searchMinds(args.mind);
@@ -17,6 +18,7 @@ module.exports = function(Hive, Queen, Bees, Locator, Cache){
     callback(drone.meta.id, true);
   };
 
+  // spawn drones with <minds...>
   Queen.spawnDrones = function(args, callback){
     let spawnedDrones = [];
     let spawningDrones = args.minds;
@@ -43,6 +45,9 @@ module.exports = function(Hive, Queen, Bees, Locator, Cache){
     loop();
   };
 
+
+  // if we are allowing drones to be loaded on hive startup
+  // spawn them here
   Queen.loadStartupDrones = function(){
     if(!Array.isArray(options.loadDrones)){
       options.loadDrones = [options.loadDrones];
@@ -70,6 +75,8 @@ module.exports = function(Hive, Queen, Bees, Locator, Cache){
     Queen.startStartupDrones(spawnedDrones);
   };
 
+  // if we are starting the drones on hive startup 
+  // then start them here
   Queen.startStartupDrones = function(spawnedDrones){
     if(!options.startDronesOnLoad){
       debug("dont start em...");
@@ -83,6 +90,7 @@ module.exports = function(Hive, Queen, Bees, Locator, Cache){
     }
   };
 
+  // start a drone with <mind>
   Queen.startDrone = function(args, callback){
     let cachedMindName = Locator.searchMinds(args.mind);
     if(!cachedMindName){
@@ -110,6 +118,7 @@ module.exports = function(Hive, Queen, Bees, Locator, Cache){
     callback(cachedMind.instance, true);
   };
 
+  // start drones with <minds...>
   Queen.startDrones = function(args, callback, cli){
     let startedDrones = [];
     let startingDrones = args.minds;
@@ -136,6 +145,7 @@ module.exports = function(Hive, Queen, Bees, Locator, Cache){
     loop();
   };
 
+  // retire a spawned drone with <mind>
   Queen.retireDrone = function(args, callback){
     let cachedMindName = Locator.searchMinds(args.mind);
     if(!cachedMindName){
@@ -151,6 +161,7 @@ module.exports = function(Hive, Queen, Bees, Locator, Cache){
     callback(drone.meta.id, true);
   };
 
+  // retire drones spawned with <minds...>
   Queen.retireDrones = function(args, callback, cli){
     let retiredDrones = [];
     let retiringDrones = args.minds;
@@ -177,6 +188,7 @@ module.exports = function(Hive, Queen, Bees, Locator, Cache){
     loop();
   };
 
+  // stop a drone from creating new workers with <mind>
   Queen.stopDrone = function(args, callback){
     let cachedMindName = Locator.searchMinds(args.mind);
     if(!cachedMindName){
@@ -191,6 +203,7 @@ module.exports = function(Hive, Queen, Bees, Locator, Cache){
     callback(drone.meta.id, true);
   };
 
+  // stop drones from creating new workers with <minds...>
   Queen.stopDrones = function(args, callback, cli){
     let stoppedDrones = [];
     let stoppingDrones = args.minds;

@@ -1,8 +1,10 @@
 module.exports = function CLI(Hive){
+  // our includes
   const vorpal = require('vorpal')();
   let delimiter = "hive:0.0.1$";
   let numberOfLoginAttempts = 0;
 
+  // our functions module
   let functions = require('./functions')(vorpal, Hive);
 
   vorpal.delimiter(delimiter).show();

@@ -1,11 +1,14 @@
 module.exports = function Locator(Queen, Cache){
+  // our includes
   const debug = require('debug')('queen:locator');
   const common = require('../Common');
   const path = require('path');
   const glob = require('multi-glob').glob;
 
+  // our locator module
   let loc = {};
 
+  // cache the drone file / folder found
   loc.cacheMeta = function(droneMindFile){
     debug(droneMindFile);
     let droneMind = path.basename(droneMindFile, '.js');
@@ -14,6 +17,7 @@ module.exports = function Locator(Queen, Cache){
     meta.path = droneMindFile;
     meta.cachedAt = common.timestamp();
 
+    // if we have a cached instance already, don't remove the stored instance
     if(Cache.drones.hasOwnProperty(droneMind) && Cache.drones[droneMind].hasOwnProperty('instance')){
       meta.instance = Cache.drones[droneMind].instance;
     }
@@ -21,6 +25,7 @@ module.exports = function Locator(Queen, Cache){
     Cache.drones[droneMind] = meta;
   };
 
+  // iterate through our drone folder (process.cwd() / drones) and add files to our cache
   loc.buildCache = function(callback){
     callback = callback || function(){};
     let globOptions = {};
@@ -38,11 +43,13 @@ module.exports = function Locator(Queen, Cache){
     });
   };
 
+  // rerun our cache building function
   loc.rebuildCache = function(callback){
     callback = callback || function(){};
     loc.buildCache(callback);
   };
 
+  // this function helps find drones by a mind name or by beeID
   loc.searchMinds = function(needle){
     let caseSensitiveMatch = null;
     for(let droneMind in Cache.drones){

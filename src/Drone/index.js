@@ -1,11 +1,20 @@
 module.exports = function Drone(Hive, Mind){
+  // our includes
   const debug = require('debug')('drone:base');
   const later = require('later');
 
+  // the returned drone object
   let drone = require('../Bee')(Hive, 'drone');
 
+  // our schedules object
+  drone.schedules = {};
+
+  // holds the workers that have been spawned due to scheduling
+  // we also use this to decide if we should start a new worker
   drone.threads = {};
 
+  // private function to load the mind from the file
+  // we want the file to be the fresh require
   let loadMind = function(){
     drone.mind = {};
     drone.mind.name = Mind.name;
@@ -14,6 +23,7 @@ module.exports = function Drone(Hive, Mind){
     try {
       delete require.cache[require.resolve(Mind.path)];
       drone.mind.module = require(Mind.path);
+      // if mind file is in the form of a function, lets execute it
       if(typeof drone.mind.module === 'function'){
         drone.mind.module = drone.mind.module();
       }
@@ -24,6 +34,7 @@ module.exports = function Drone(Hive, Mind){
     }
   };
 
+  // private function to reload the mind and restart the drone if already started
   let reloadMind = function(){
     debug("RELOADING THAT MF");
     drone.unschedule();
@@ -34,27 +45,37 @@ module.exports = function Drone(Hive, Mind){
     }
   };
 
-
+  // private function that gets bound to a timer, this gets executed when a timer fires
   let createBoundedFunction = function(scheduleKey, callback){
+    // the function to return
     let func = function(drone, scheduleKey, ...args){
       if(!drone.canStartNewThread()){
         return false;
       }
+      // what the "this" in the drone task refers to
       let droneExport = drone.export();
       droneExport.schedule = scheduleKey;
+      // we want to be able to emit events to the hive
       droneExport.emit = function(event,...args){
         Hive.emit.apply(Hive, ["drone:"+event, ...args]);
       };
+      // create the worker 
       let worker = require('../Worker')(Hive, droneExport, drone.mind.module.task, args);
+      // add the worker to our threads
       drone.threads[worker.meta.id] = worker;
+      // start the worker and when finished, delete the thread
       worker.start(function(){
         drone.threads[worker.meta.id] = null;
         delete drone.threads[worker.meta.id];
       });
     };
+    // return this function with the proper stuff bound to it
     return func.bind(drone, drone, scheduleKey);
   };
 
+  // function to decide if we should start a new thread
+  // to set max threads, in the drone mind, create a property of 
+  // mind.maxThreads = [Int]
   drone.canStartNewThread = function(){
     let numberOfThreads = Object.keys(drone.threads).length;
     let maxThreads = drone.mind.module.maxThreads || 0;
@@ -64,12 +85,21 @@ module.exports = function Drone(Hive, Mind){
     return false;
   };
 
+  // the drone's garbage collection function
+  // run when we emit the 'gc' event from the hive, or when drone retires
   drone.gc = function(){
     debug("GARBAGE COLLECTION....");
     Hive.removeListener('reload', reloadMind);
     drone.unschedule();
   };
 
+  // our function to create the timers that fire our function that creates a worker
+  // we can use different types of timers for our needs
+  // hz: run every [Int] milliseconds
+  // later: run on a text-based schedule via later: http://bunkat.github.io/later/parsers.html#text
+  // cron: run on a cron schedule via later: http://bunkat.github.io/later/parsers.html#cron
+  // on: run when the hive emits the specified event ("drone:"+[your event name])
+  // we also include the function to remove the schedule in our returned object
   drone.createSchedule = function(scheduleType, scheduleValue, scheduleKey){
     let schedule = null;
     let clearSchedule = null;
@@ -95,15 +125,15 @@ module.exports = function Drone(Hive, Mind){
         clearSchedule = Hive.removeListener.bind(Hive, scheduleValue, boundedFunction);
       break;
     }
-
     let scheduledObject = {
       interval: schedule,
       clearInterval: clearSchedule
     };
-
     return scheduledObject;
   };
 
+  // this function runs through the schedules variable in the drone mind provided
+  // and creates the timers/schedules for each type
   drone.schedule = function(){
     for(let scheduleType in drone.mind.module.schedules){
       let scheduleMeta = drone.mind.module.schedules[scheduleType];
@@ -120,6 +150,8 @@ module.exports = function Drone(Hive, Mind){
     }
   };
 
+  // this function goes through all of the schedules and clears them
+  // TODO: single/multiple schedule clearing
   drone.unschedule = function(){
     debug("UNSCHEDULING");
     for(let scheduleType in drone.schedules){
@@ -135,25 +167,33 @@ module.exports = function Drone(Hive, Mind){
     debug(drone.schedules);
   };
 
+  // this starts the drone by creating the schedules and letting them run on their own time
+  // TODO: run immediately by running the task when started
   drone.start = function(runImmediately){
     runImmediately = runImmediately || false;
     drone.meta.hasStarted = true;
     drone.schedule();
   };
 
+  // this function stops the drone from creating new workers by unscheduling
+  // TODO: stop all active workers on stop if desired
   drone.stop = function(){
     drone.meta.hasStarted = false;
     drone.unschedule();
   };
 
+  // this function should run the drone immediately returning the worker's result
+  // TODO: all
   drone.fire = function(){
 
   };
 
+  // our binding function to listen to events
   let bind = function(){
     Hive.on('reload', reloadMind);
   };
 
+  // our initializer
   let init = function(){
     bind();
     loadMind();

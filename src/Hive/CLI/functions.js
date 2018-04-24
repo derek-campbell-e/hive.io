@@ -1,8 +1,13 @@
 module.exports = function CliFunctions(Cli, Hive){
+  // our important data
   let delimiter = "hive:0.0.1$";
   const Vorpal = Cli;
   let functions = {};
 
+  // function to create an authentication prompt
+  // we first ping our host to see if we can access it,
+  // if we can, then run through username and password questions
+  // after the auth process from the Hive.Remote module, we'll run the callback
   functions.authenticationPrompt = function(args, callback){
     const self = this;
     args.host = "http://localhost:5000";
@@ -39,6 +44,9 @@ module.exports = function CliFunctions(Cli, Hive){
     });
   };
 
+
+  // our function to remote into a hive elsewhere
+  // we go through the username/password prompt and after authentication, we'll switch into remote mode
   functions.remoteIntoHive = function(args, callback){
     functions.authenticationPrompt.call(this, args, function(error, host){
       if(!error){
@@ -50,6 +58,8 @@ module.exports = function CliFunctions(Cli, Hive){
     });
   };
 
+  // our function to replicate local hive data to a remote hive
+  // we go through auth process and on success, begin the replication process
   functions.replicateIntoHive = function(args, callback){
     functions.authenticationPrompt.call(this, args, function(error, host, socket){
       if(!error){
@@ -60,6 +70,7 @@ module.exports = function CliFunctions(Cli, Hive){
     });
   };
 
+  // our callback for remote authentication, here we can log important data or rerun authentication
   functions.remoteAuthenticationCallback = function(originalArgs, callback, socketStatus, host, socket){
     const self = this;
     switch(socketStatus.code){
@@ -112,6 +123,7 @@ module.exports = function CliFunctions(Cli, Hive){
     });
   };
   
+  // listen to our remote module if we get exited on 
   Hive.remote.on('remote:closed', function(){
     functions.disconnectRemoteHost(null, function(){
     });
