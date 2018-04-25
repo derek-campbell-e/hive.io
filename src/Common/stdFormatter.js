@@ -17,7 +17,14 @@ module.exports = function stdFormatter(){
         type = '%s';
         break;
       case 'object':
-        type = '%o';
+        //type = '%o';
+        if(Array.isArray(arg)){
+          type = '%s';
+          args[argIndex] = arg.join(", ");
+        } else if(arg !== null){
+          type = "%s";
+          args[argIndex] = JSON.stringify(arg);
+        }
         break;
       case 'undefined':
         type = '%s';
@@ -26,14 +33,12 @@ module.exports = function stdFormatter(){
         type = '%s';
         break;
     }
+
     if(arg instanceof Error){
       args[argIndex] = util.format("Error: %s; Message: %s", arg.name, arg.message);
       type = '%s';
     }
-    if(Array.isArray(arg)){
-      type = '%s'
-      arg = arg.join(", ");
-    }
+
     types.push(type);
   }
   let formatString = types.join(" ");

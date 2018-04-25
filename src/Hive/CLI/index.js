@@ -97,6 +97,19 @@ module.exports = function CLI(Hive){
     .command("repl <host>")
     .description("replicate drones and settings to another hive")
     .action(functions.replicateIntoHive);
+  
+  vorpal.find("exit").remove();
+
+  vorpal
+    .command("exit")
+    .action(function(args, cb){
+      try {
+        process.send('exit');
+      } catch(error){
+        Hive.error(error);
+      }
+      cb();
+    });
 
   return vorpal;
 };

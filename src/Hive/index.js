@@ -66,6 +66,21 @@ module.exports = function Hive(Options){
     hive.setMaxListeners(0);
     queen = require('../Queen')(hive, bees);
     queen.spawn();
+    process.on('message', function(message){
+      switch(message.message){
+        case 'command':
+          cli.exec(message.command, function(data){
+            hive.log("data from exec", data);
+            process.send(data);
+          });
+        break;
+      }
+    });
+    try {
+      process.send(hive.export());
+    } catch(error){
+      hive.error(error);
+    }
     return hive;
   };
   
