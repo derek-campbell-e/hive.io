@@ -8,7 +8,7 @@ module.exports = function CLI(Hive){
   let functions = require('./functions')(vorpal, Hive);
 
   vorpal.delimiter(delimiter).show();
-
+  
   vorpal.command("stats").action(functions.emitter('stats'));
 
   vorpal

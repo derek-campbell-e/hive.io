@@ -26,6 +26,13 @@ module.exports = function Hive(Options){
   let queen = null;
 
   hive.processCommandMessage = function(command, args, callback){
+    let oldcallback = callback;
+    if(hive.options.detached){
+      callback = function(){
+        oldcallback.apply(oldcallback, arguments);
+        process.send('command:result');
+      };
+    }
     if(hive.remote.meta.isUsingRemote){
       hive.log("emitting message to remote hive");
       let ableToEmitMessage =  hive.remote.emitToHost(null, "remote:command", command, args, callback);

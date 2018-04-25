@@ -13,6 +13,7 @@ module.exports = function Options(overrides){
   options.logFolder = path.join(process.cwd(), 'logs');
   options.maxTaskRuntime = 60 * 1000;
   options.verbose = processArgs['show-logs'] || overrides['verbose'] || false;
+  options.detached = processArgs['detached'] || false;
   options = require('extend')(true, {}, options, overrides);
   return options;
 };

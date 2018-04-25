@@ -40,10 +40,9 @@ module.exports = function Daemon(){
     let cwd = args.directory || process.cwd();
     cwd = path.resolve(cwd);
    
-    let hive = fork(hiveIOPath, ['--port', args.options.port || 5000], {
+    let hive = fork(hiveIOPath, ['--port', args.options.port || 5000, '--detached', true], {
       cwd: cwd,
       silent: true,
-      //stdio: 'ipc'
     });
    
     hive.once('message', function(hiveMeta){
@@ -63,9 +62,19 @@ module.exports = function Daemon(){
     }
     let hive = hives[cwd];
     let command = args.command.join(" ");
+    /*
     hive.process.send({message: 'command', command: command});
     hive.process.once('message', function(data){
       callback(data);
+    });
+    */
+    piper(hive);
+    hive.process.stdin.write(command + "\n");
+    hive.process.once('message', function(message){
+      if(message === 'command:result'){
+        unpiper(hive);
+        callback(message);
+      }
     });
   };
 
