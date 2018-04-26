@@ -6,7 +6,8 @@
   "scripts": {
     "test": "USERNAME=admin PASSWORD=pass DEBUG=*,-node*,-socket*,-exp*,-snap*,-eng*,-body* nodemon index.js --ignore **/Daemon",
     "start": "USERNAME=admin PASSWORD=pass nodemon index.js --ignore **/drones/",
-    "socket": "DEBUG=*,-node*,-socket*,-exp*,-snap*,-eng* nodemon src/Hive/Socket/tester.js"
+    "socket": "DEBUG=*,-node*,-socket*,-exp*,-snap*,-eng* nodemon src/Hive/Socket/tester.js",
+    "daemon": "nodemon src/Hive/Daemon"
   },
   "author": "",
   "license": "ISC",

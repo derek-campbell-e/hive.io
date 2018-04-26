@@ -8,6 +8,8 @@ module.exports = function Hive(Options){
 
   let hive = common.object('hive');
   hive.options = options;
+  hive.meta.port = options.port;
+  
   hive.log("running hive with options", options);
   let remoteManager = require('./Remote')(hive);
   hive.remote = remoteManager;
@@ -20,6 +22,7 @@ module.exports = function Hive(Options){
   let server = require('./Server')(hive);
   let socketManager = require('./Socket')(hive, server, cli);
   
+  hive.token = require('./Token')();
  
 
   let bees = {};
@@ -73,21 +76,20 @@ module.exports = function Hive(Options){
     hive.setMaxListeners(0);
     queen = require('../Queen')(hive, bees);
     queen.spawn();
-    process.on('message', function(message){
-      switch(message.message){
-        case 'command':
-          cli.exec(message.command, function(data){
-            hive.log("data from exec", data);
-            process.send(data);
-          });
-        break;
+    hive.token.forever(function(error, token){
+      if(error){
+        return false;
+      }
+      try {
+        process.send({
+          token: token,
+          hive: hive.export()
+        });
+      } catch(error){
+        hive.error(error);
       }
     });
-    try {
-      process.send(hive.export());
-    } catch(error){
-      hive.error(error);
-    }
+    
     return hive;
   };
   

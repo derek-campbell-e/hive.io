@@ -4,12 +4,22 @@ module.exports = function Daemon(){
   const common = require('../../Common');
   const vorpal = require('vorpal')();
   const io = require('socket.io')(port);
+  const remote = require('socket.io-client');
   const fork = require('child_process').fork;
   const path = require('path');
   const hiveIOPath = path.join(__dirname, '../../../index.js');
-  let daemon = common.object('hive', 'daemon', {verbose: true});
 
+  let daemon = common.object('hive', 'daemon', {verbose: false});
   let hives = {};
+  let functions = require('./functions')(daemon, hives);
+
+  daemon.processCommandMessage = function(event, args, callback){
+    daemon.emit(event, args, callback);
+  };
+
+  
+
+  let cli = require('./cli')(daemon);
 
   let hiveLocator = function(hiveID){
     for(let cwd in hives){
@@ -35,8 +45,8 @@ module.exports = function Daemon(){
     process.stdin.unpipe(hive.process.stdin);
   };
 
+  /*
   daemon.spawnHive = function(args, callback){
-    
     let cwd = args.directory || process.cwd();
     cwd = path.resolve(cwd);
    
@@ -45,15 +55,19 @@ module.exports = function Daemon(){
       silent: true,
     });
    
-    hive.once('message', function(hiveMeta){
-      hives[cwd] = {
+    hive.once('message', function(startupData){
+      hives[startupData.hive.id] = {
         process: hive,
-        hiveID: hiveMeta.id,
+        hiveID: startupData.hive.id,
         directory: cwd,
+        token: startupData.token,
+        port: startupData.port,
+        socket: remote("//localhost:")
       };
-      callback(hiveMeta.id);
+      callback(startupData.hive.id);
     });
   };
+  */
 
   daemon.sendCommand = function(args, callback){
     let cwd = args.options.directory || process.cwd();
@@ -94,7 +108,8 @@ module.exports = function Daemon(){
       }
     });
   };
-  
+
+  /*
   vorpal
     .command("new hive [directory]")
     .option('-p, --port <port>', "port to run on")
@@ -111,8 +126,10 @@ module.exports = function Daemon(){
       return `hive "${args}"`;
     })
     .action(daemon.sendCommand)
+  */
 
   let bind = function(){
+    daemon.on("new:hive", daemon.spawnHive);
     process.on('SIGINT', function(){
       for(let cwd in hives){
         let hive = hives[cwd];
@@ -125,7 +142,7 @@ module.exports = function Daemon(){
   let init = function(){
     bind();
     daemon.log("starting daemon on port:", port);
-    vorpal.delimiter("hive-daemon$").show();
+    //vorpal.delimiter("hive-daemon$").show();
     return daemon;
   };
 

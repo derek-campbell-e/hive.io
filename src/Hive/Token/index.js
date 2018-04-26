@@ -26,5 +26,17 @@ module.exports = function TokenAuthentication(){
     jwt.verify(token, secret, callback);
   };
 
+
+  token.forever = function(callback){
+    let error = null;
+    let token = null;
+    try {
+      token = jwt.sign({data: 'hive-daemon'}, secret, {expiresIn: 60 * 60});
+    } catch(e) {
+      error = e;
+    }
+    callback(error, token);
+  };
+
   return token;
 };

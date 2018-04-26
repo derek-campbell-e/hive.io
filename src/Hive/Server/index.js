@@ -12,8 +12,8 @@ module.exports = function Server(Hive){
   let server = common.object('hive', 'server');
 
   // our token authentication module
-  let tokenAuth = require('./token')();
-  server.token = tokenAuth;
+  let tokenAuth = Hive.token;
+  server.token = Hive.token;
   
   // our logger middleware for express
   let loggerMiddleWare = function(req, res, next){
