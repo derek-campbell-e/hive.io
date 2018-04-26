@@ -7,6 +7,8 @@ module.exports = function Hive(Options){
   
 
   let hive = common.object('hive');
+  hive.token = require('./Token')();
+  
   hive.options = options;
   hive.meta.port = options.port;
   
@@ -22,7 +24,7 @@ module.exports = function Hive(Options){
   let server = require('./Server')(hive);
   let socketManager = require('./Socket')(hive, server, cli);
   
-  hive.token = require('./Token')();
+  
  
 
   let bees = {};

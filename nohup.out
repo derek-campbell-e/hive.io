@@ -24,3 +24,6 @@ TypeError: Cannot read property 'create' of undefined
     at next (/home/pi/Documents/node/hive.io/node_modules/express/lib/router/index.js:275:10)
     at multerMiddleware (/home/pi/Documents/node/hive.io/node_modules/multer/lib/make-middleware.js:18:41)
     at Layer.handle [as handle_request] (/home/pi/Documents/node/hive.io/node_modules/express/lib/router/layer.js:95:5)
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node index.js`[39m
