@@ -32,7 +32,8 @@ module.exports = function Queen(Hive, Bees){
     'retire:drones': 'retireDrones',
     'ls:drones': 'listDrones',
     'next:drone': 'nextDroneFire',
-    'fire:drone': 'fireDrone'
+    'fire:drone': 'fireDrone',
+    'emit:drone': 'emitDroneMessage'
   };
 
   // our stats object
@@ -185,6 +186,10 @@ module.exports = function Queen(Hive, Bees){
       json[droneMind] = meta;
     }
     callback(json, "here are your drones mf");
+  };
+
+  queen.emitDroneMessage = function(args, callback){
+    Hive.emit.apply(Hive, [`drone:${args.droneEvent}`, ...args.args, callback]);
   };
 
   // our binding function to listen to hive events

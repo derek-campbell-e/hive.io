@@ -1,0 +1,26 @@
+[33m[nodemon] 1.11.0[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching: *.*[39m
+[32m[nodemon] starting `node index.js`[39m
+hive.io$ [9D[9CTypeError: Cannot read property 'create' of undefined
+    at /home/pi/Documents/node/hive.io/src/Hive/Server/routes.js:22:17
+    at Layer.handle [as handle_request] (/home/pi/Documents/node/hive.io/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/pi/Documents/node/hive.io/node_modules/express/lib/router/route.js:137:13)
+    at Route.dispatch (/home/pi/Documents/node/hive.io/node_modules/express/lib/router/route.js:112:3)
+    at Layer.handle [as handle_request] (/home/pi/Documents/node/hive.io/node_modules/express/lib/router/layer.js:95:5)
+    at /home/pi/Documents/node/hive.io/node_modules/express/lib/router/index.js:281:22
+    at Function.process_params (/home/pi/Documents/node/hive.io/node_modules/express/lib/router/index.js:335:12)
+    at next (/home/pi/Documents/node/hive.io/node_modules/express/lib/router/index.js:275:10)
+    at multerMiddleware (/home/pi/Documents/node/hive.io/node_modules/multer/lib/make-middleware.js:18:41)
+    at Layer.handle [as handle_request] (/home/pi/Documents/node/hive.io/node_modules/express/lib/router/layer.js:95:5)
+TypeError: Cannot read property 'create' of undefined
+    at /home/pi/Documents/node/hive.io/src/Hive/Server/routes.js:22:17
+    at Layer.handle [as handle_request] (/home/pi/Documents/node/hive.io/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/pi/Documents/node/hive.io/node_modules/express/lib/router/route.js:137:13)
+    at Route.dispatch (/home/pi/Documents/node/hive.io/node_modules/express/lib/router/route.js:112:3)
+    at Layer.handle [as handle_request] (/home/pi/Documents/node/hive.io/node_modules/express/lib/router/layer.js:95:5)
+    at /home/pi/Documents/node/hive.io/node_modules/express/lib/router/index.js:281:22
+    at Function.process_params (/home/pi/Documents/node/hive.io/node_modules/express/lib/router/index.js:335:12)
+    at next (/home/pi/Documents/node/hive.io/node_modules/express/lib/router/index.js:275:10)
+    at multerMiddleware (/home/pi/Documents/node/hive.io/node_modules/multer/lib/make-middleware.js:18:41)
+    at Layer.handle [as handle_request] (/home/pi/Documents/node/hive.io/node_modules/express/lib/router/layer.js:95:5)

@@ -53,7 +53,7 @@ module.exports = function CLI(Hive){
     .action(functions.emitter('stop:drones'));
 
   vorpal
-    .command("fire drone <mind>")
+    .command("fire drone <mind> [args...]")
     .description("run a drone immediately")
     .action(functions.emitter('fire:drone'));
   
@@ -71,7 +71,7 @@ module.exports = function CLI(Hive){
   vorpal
     .command("next <mind> [number]")
     .description("show the next fire times for <drone>")
-    .action(functions.emitter('next:drone'))
+    .action(functions.emitter('next:drone'));
   
   vorpal
     .command("reload")
@@ -97,6 +97,11 @@ module.exports = function CLI(Hive){
     .command("repl <host>")
     .description("replicate drones and settings to another hive")
     .action(functions.replicateIntoHive);
+  
+  vorpal
+    .command("emit <droneEvent> [args...]")
+    .description("emit a drone event message with args")
+    .action(functions.emitter('emit:drone'));
   
   vorpal.find("exit").remove();
 

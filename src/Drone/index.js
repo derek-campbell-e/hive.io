@@ -115,10 +115,19 @@ module.exports = function Drone(Hive, Mind){
           meta.next = ['indeterminate'];
         break;
         default:
-          meta.next = [...later.schedule(schedule.parsed).next(args.number)];
-          for(let index in meta.next){
-            let next = meta.next[index];
-            meta.next[index] = formatLaterTime(next);
+          let occur = later.schedule(schedule.parsed).next(args.number);
+          if(!Array.isArray(occur)){
+            occur = [occur];
+          }
+          try {
+            meta.next = [...occur];
+            for(let index in meta.next){
+              let next = meta.next[index];
+              meta.next[index] = formatLaterTime(next);
+            }
+          } catch (error){
+            meta.next = [];
+            drone.error(error);
           }
         break;
 
@@ -230,7 +239,7 @@ module.exports = function Drone(Hive, Mind){
     let boundedFunction = createBoundedFunction('fire', function(){
       callback(common.stdFormatter.apply(common, arguments));
     });
-    boundedFunction();
+    boundedFunction.call();
   };
 
 
