@@ -14,6 +14,7 @@ module.exports = function Options(overrides){
   options.maxTaskRuntime = 60 * 1000;
   options.verbose = processArgs['show-logs'] || overrides['verbose'] || false;
   options.detached = processArgs['detached'] || false;
+  options.daemon = processArgs['daemon'] || 4200;
   options = require('extend')(true, {}, options, overrides);
   return options;
 };

@@ -3,6 +3,7 @@ module.exports = function Socket(Hive, Server, Cli){
   const debug = require('debug')('hive:server');
   const common = require('../../Common');
   const io = require('socket.io')(Server.http);
+  const daemon = require('socket.io-client');
 
   // our socket manager object
   let sm = common.object('hive', 'socket-manager');
@@ -87,6 +88,17 @@ module.exports = function Socket(Hive, Server, Cli){
     let replication = require('../Replicate')(Hive);
     replication.replicateInto(data, function(){
       socket.emit("complete:replication");
+    });
+  };
+
+  sm.notifyDaemon = function(data, callback){
+    let daemonurl = `http://localhost:${options.daemon}`;
+    sm.log(daemonurl);
+    let socket = daemon(daemonurl);
+    socket.once('connect', function(){
+      socket.emit(`ready`, process.pid, data);
+      socket.close();
+      callback();
     });
   };
   

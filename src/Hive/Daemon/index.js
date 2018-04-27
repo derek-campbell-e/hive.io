@@ -11,20 +11,18 @@ module.exports = function Daemon(){
 
   let daemon = common.object('hive', 'daemon', {verbose: false});
   let hives = {};
-  let functions = require('./functions')(daemon, hives);
+  let functions = require('./functions')(daemon, hives, io);
 
   daemon.processCommandMessage = function(event, args, callback){
     daemon.emit(event, args, callback);
   };
 
-  
-
   let cli = require('./cli')(daemon);
 
-  let hiveLocator = function(hiveID){
-    for(let cwd in hives){
-      let hive = hives[cwd];
-      if(hive.hiveID === hiveID){
+  let hiveLocator = function(byHiveID){
+    for(let hiveID in hives){
+      let hive = hives[hiveID];
+      if(hiveID === byHiveID){
         return hive;
       }
     }
@@ -130,6 +128,13 @@ module.exports = function Daemon(){
 
   let bind = function(){
     daemon.on("new:hive", daemon.spawnHive);
+    daemon.on("enter:hive", daemon.enterHive);
+    io.on('connection', function(socket){
+      socket.once('ready', function(){
+        daemon.emit.apply(daemon, ['ready', ...arguments]);
+      });
+    });
+    /*
     process.on('SIGINT', function(){
       for(let cwd in hives){
         let hive = hives[cwd];
@@ -137,6 +142,7 @@ module.exports = function Daemon(){
       }
       io.close();
     });
+    */
   };
 
   let init = function(){

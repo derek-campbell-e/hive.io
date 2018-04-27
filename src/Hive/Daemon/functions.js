@@ -1,6 +1,8 @@
-module.exports = function(Daemon, Hives){
+module.exports = function(Daemon, Hives, io){
   const remote = require('socket.io-client');
   const fork = require('child_process').fork;
+  const spawn = require('child_process').spawn;
+
   const path = require('path');
   const hiveIOPath = path.join(__dirname, '../../../index.js');
 
@@ -25,15 +27,29 @@ module.exports = function(Daemon, Hives){
   Daemon.spawnHive = function(args, callback){
     let cwd = args.directory || process.cwd();
     cwd = path.resolve(cwd);
-    let hive = fork(hiveIOPath, ['--port', args.options.port || 5000, '--detached', true], {
+    let hive = spawn(`node`, [hiveIOPath, '--port', args.options.port || 5000, '--detached', true, "--daemon", "4200"], {
       cwd: cwd,
-      silent: true,
+      //shell: true,
+      detached: true,
+      stdio: 'ignore'
     });
-    Daemon.bindNewHiveProcess(hive);
-    hive.once('message', function(startupData){
-      Daemon.addHiveToList(cwd, hive, startupData);
-      callback(startupData.hive.id);
+    hive.once('error', function(error){
+      console.log(error);
     });
+
+    let onReady = function(pid, data){
+      console.log(arguments);
+      if(pid === hive.pid){
+        console.log(data);
+        Daemon.removeListener('ready', onReady);
+      }
+     
+    };
+
+    Daemon.on('ready', onReady);
+
+    //hive.unref();
+    callback(hive.pid);
   };
 
   Daemon.addHiveToList = function(cwd, hive, startupData){

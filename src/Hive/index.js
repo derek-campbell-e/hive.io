@@ -18,14 +18,14 @@ module.exports = function Hive(Options){
 
   let cli = require('./CLI')(hive);
   hive.cli = {};
+
   hive.cli.log = function(){
     cli.log.apply(cli, arguments);
   };
+
   let server = require('./Server')(hive);
   let socketManager = require('./Socket')(hive, server, cli);
   
-  
- 
 
   let bees = {};
   let queen = null;
@@ -78,20 +78,19 @@ module.exports = function Hive(Options){
     hive.setMaxListeners(0);
     queen = require('../Queen')(hive, bees);
     queen.spawn();
+
     hive.token.forever(function(error, token){
-      if(error){
-        return false;
-      }
-      try {
-        process.send({
-          token: token,
-          hive: hive.export()
+      let output = {
+        id: hive.meta.id,
+        token: token
+      };
+      if(options.detached){
+        hive.log("trying to notifty");
+        socketManager.notifyDaemon(output, function(){
+          hive.log("notified daemon");
         });
-      } catch(error){
-        hive.error(error);
       }
     });
-    
     return hive;
   };
   

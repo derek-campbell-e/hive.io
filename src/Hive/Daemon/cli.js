@@ -20,6 +20,10 @@ module.exports = function CLI(Hive){
   vorpal
     .command("new hive [directory]")
     .action(functions.emitter('new:hive'));
+
+  vorpal
+    .command("enter hive <hiveID>")
+    .action(functions.emitter('enter:hive'));
   
   vorpal.command("stats").action(functions.emitter('stats'));
 
