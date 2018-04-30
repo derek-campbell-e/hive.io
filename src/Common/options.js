@@ -15,6 +15,7 @@ module.exports = function Options(overrides){
   options.verbose = processArgs['show-logs'] || overrides['verbose'] || false;
   options.detached = processArgs['detached'] || false;
   options.daemon = processArgs['daemon'] || 4200;
+  options.daemonMode = false;
   options = require('extend')(true, {}, options, overrides);
   return options;
 };

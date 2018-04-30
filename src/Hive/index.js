@@ -12,7 +12,7 @@ module.exports = function Hive(Options){
   hive.options = options;
   hive.meta.port = options.port;
   
-  hive.log("running hive with options", options);
+  
   let remoteManager = require('./Remote')(hive);
   hive.remote = remoteManager;
 
@@ -25,26 +25,17 @@ module.exports = function Hive(Options){
 
   let server = require('./Server')(hive);
   let socketManager = require('./Socket')(hive, server, cli);
-  
 
   let bees = {};
   let queen = null;
 
   hive.processCommandMessage = function(command, args, callback){
-    let oldcallback = callback;
-    if(hive.options.detached){
-      callback = function(){
-        oldcallback.apply(oldcallback, arguments);
-        process.send('command:result');
-      };
-    }
     if(hive.remote.meta.isUsingRemote){
       hive.log("emitting message to remote hive");
       let ableToEmitMessage =  hive.remote.emitToHost(null, "remote:command", command, args, callback);
       if(!ableToEmitMessage){
         hive.log("unable to talk to remote host...");
         cli.log("Unable to talk to remote host...disconnecting");
-        //functions.disconnectRemoteHost(callback);
       } 
       return ableToEmitMessage;
     }
@@ -76,6 +67,14 @@ module.exports = function Hive(Options){
   let init = function(){
     bind();
     hive.setMaxListeners(0);
+
+    if(options.daemonMode){
+      hive.cli = cli;
+      hive.log("running hive in daemon mode...");
+      return hive;
+    }
+
+    hive.log("running hive with options", options);
     queen = require('../Queen')(hive, bees);
     queen.spawn();
 

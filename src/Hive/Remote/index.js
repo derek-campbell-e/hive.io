@@ -71,7 +71,6 @@ module.exports = function RemoteManager(Hive){
       remote.sockets[socket.id] = null;
       delete remote.sockets[socket.id];
     }
-    //callback(socketStatus['socket-connect-error']);
   };
 
   // our function to handle socket errors
@@ -80,7 +79,6 @@ module.exports = function RemoteManager(Hive){
       remote.sockets[socket.id] = null;
       delete remote.sockets[socket.id];
     }
-    //callback(socketStatus['socket-connect-error']);
   };
 
   // our function called when a remote socket has been disconnected
@@ -95,7 +93,6 @@ module.exports = function RemoteManager(Hive){
     if(remote.socketCloseCallbackOverride){
       return remote.socketCloseCallbackOverride();
     }
-    //callback(socketStatus['socket-disconnected']);
   };
 
   // our function to close the active remote socket
@@ -127,6 +124,34 @@ module.exports = function RemoteManager(Hive){
     socket.once('connect_error', remote.remoteSocketConnectError.bind(remote, socket));
     socket.once('disconnect', remote.disconnectRemoteSocket.bind(remote, socket));
     socket.once('error', remote.remoteSocketError.bind(remote, socket));
+  };
+
+  remote.directConnect = function(port, token, callback){
+    let url = new URL(`http://localhost:${port}`)
+    url.pathname = `/`;
+    url.searchParams.set('token', token);
+    let socket = io(url.href);
+    socket.once('connect', function(){
+      remote.localHost = socket;
+      callback(null, socket);
+    });
+    socket.once('connect_error', function(error){
+      callback(error);
+    });
+    socket.once('disconnect', function(reason){
+      callback(reason);
+    });
+    socket.once('error', function(error){
+      callback(error);
+    })
+  };
+
+  remote.emitToLocalHost = function(optionalHost, event, ...args){
+    if(!remote.localHost){
+      return false;
+    }
+    remote.localHost.emit.apply(remote.localHost, [event, ...args]);
+    return true;
   };
 
   // our function to listen to events
