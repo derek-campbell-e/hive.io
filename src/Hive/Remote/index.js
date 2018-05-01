@@ -127,6 +127,7 @@ module.exports = function RemoteManager(Hive){
   };
 
   remote.directConnect = function(port, token, callback){
+    remote.localHost = null;
     let url = new URL(`http://localhost:${port}`)
     url.pathname = `/`;
     url.searchParams.set('token', token);
@@ -136,12 +137,15 @@ module.exports = function RemoteManager(Hive){
       callback(null, socket);
     });
     socket.once('connect_error', function(error){
+      remote.localHost = null;
       callback(error);
     });
     socket.once('disconnect', function(reason){
+      remote.localHost = null;
       callback(reason);
     });
     socket.once('error', function(error){
+      remote.localHost = null;
       callback(error);
     })
   };

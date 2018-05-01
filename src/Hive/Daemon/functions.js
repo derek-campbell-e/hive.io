@@ -3,8 +3,7 @@ module.exports = function DaemonFunctions(Daemon){
   const fs = require('fs');
   const binPath = path.join(__dirname, '../../../', '.bin');
 
-  Daemon.enterHive = function(args, callback){
-    Daemon.localHive = null;
+  Daemon.getHiveByID = function(id){
     const filename = "hives.json";
     let currentData = {};
     try {
@@ -12,15 +11,41 @@ module.exports = function DaemonFunctions(Daemon){
     } catch(error){
 
     }
-    if(!currentData.hasOwnProperty(args.id)){
-      return callback("No hive found by that id...");
+    if(!currentData.hasOwnProperty(id)){
+      return false;
     }
-    let hiveData = currentData[args.id];
+    let hiveData = currentData[id];
+    return hiveData;
+  };
+
+  Daemon.retireHive = function(args, callback){
+    Daemon.localHive = null;
+    let hiveData = Daemon.getHiveByID(args.id);
+    if(!hiveData){
+      return callback("No hive by that ID exists...");
+    }
+    Daemon.remote.directConnect(hiveData.port, hiveData.token, function(error, socket){
+      if(!error){
+        Daemon.remote.emitToLocalHost(null, "remote:command", "retire:hive", args, callback);
+      } else {
+        callback(error);
+      }
+    });
+  };
+
+  Daemon.enterHive = function(args, callback){
+    Daemon.localHive = null;
+    let hiveData = Daemon.getHiveByID(args.id);
+    if(!hiveData){
+      return callback("No hive by that ID exists...");
+    }
     Daemon.remote.directConnect(hiveData.port, hiveData.token, function(error, socket){
       if(!error){
         Daemon.localHive = socket;
         Daemon.cli.delimiter(`hive:${args.id}$`).show();
-        callback("WE CAN ENTER THE HIVE!!!!");
+        Daemon.cli.log("entering hive...");
+        callback();
+        //Daemon.cli.delimiter(`hive:${args.id}$`).show();
       } else {
         callback(error);
       }
@@ -28,7 +53,7 @@ module.exports = function DaemonFunctions(Daemon){
   };
 
   Daemon.createAuthFile = function(args, callback){
-    const data = {id: args.data.id, token: args.data.token, cwd: args.cwd, port: args.options.port};
+    const data = {id: args.data.id, token: args.data.token, cwd: args.cwd, port: args.options.port, pid: args.pid};
     const filename = "hives.json";
     let currentData = {};
     try {
@@ -44,7 +69,8 @@ module.exports = function DaemonFunctions(Daemon){
       } 
       fs.writeFile(path.join(binPath, filename), JSON.stringify(currentData, null, 4), function(error){
         if(error) throw error;
-        callback(args.data.id);
+        Daemon.cli.log(args.data.id);
+        callback();
       });
     });
   };
@@ -58,7 +84,7 @@ module.exports = function DaemonFunctions(Daemon){
     args.options.port = args.options.port || 5000;
     let hive = spawn(`node`, [hiveIOPath, '--port', args.options.port || 5000, '--detached', true, "--daemon", "4200"], {
       cwd: cwd,
-      //shell: true,
+      shell: true,
       detached: true,
       stdio: 'ignore'
     });
@@ -67,6 +93,7 @@ module.exports = function DaemonFunctions(Daemon){
       if(hive.pid === pid){
         Daemon.removeListener('ready', onReady);
         args.data = data;
+        args.pid = hive.pid;
         hive.unref();
         Daemon.createAuthFile(args, callback);
       }

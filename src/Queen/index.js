@@ -33,7 +33,8 @@ module.exports = function Queen(Hive, Bees){
     'ls:drones': 'listDrones',
     'next:drone': 'nextDroneFire',
     'fire:drone': 'fireDrone',
-    'emit:drone': 'emitDroneMessage'
+    'emit:drone': 'emitDroneMessage',
+    'retire:hive': 'retireHive',
   };
 
   // our stats object
@@ -186,6 +187,14 @@ module.exports = function Queen(Hive, Bees){
       json[droneMind] = meta;
     }
     callback(json, "here are your drones mf");
+  };
+
+  queen.retireHive = function(args, callback){
+    Hive.emit("gc");
+    setTimeout(function(){
+      process.exit(0);
+    }, 5000);
+    callback();
   };
 
   queen.emitDroneMessage = function(args, callback){

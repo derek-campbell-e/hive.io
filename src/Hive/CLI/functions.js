@@ -3,6 +3,7 @@ module.exports = function CliFunctions(Cli, Hive){
   let delimiter = `hive.io$`;
   const Vorpal = Cli;
   let functions = {};
+  let numberOfLoginAttempts = 0;
 
   // function to create an authentication prompt
   // we first ping our host to see if we can access it,
@@ -98,7 +99,7 @@ module.exports = function CliFunctions(Cli, Hive){
   // this function decides where to emit the command to process, whether local or remote
   functions.emitter = function(event){
     let handler = function(args, callback){
-      Hive.processCommandMessage(event, args, callback);
+      Hive.processCommandMessage.call(this, event, args, callback);
     };
     return handler;
   };

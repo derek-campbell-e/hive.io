@@ -3,7 +3,7 @@ module.exports = function CLI(Hive, Options){
   // our includes
   const vorpal = require('vorpal')();
   let delimiter = `hive.io$`;
-  let numberOfLoginAttempts = 0;
+  
 
   // our functions module
   let functions = require('./functions')(vorpal, Hive);
@@ -106,26 +106,24 @@ module.exports = function CLI(Hive, Options){
 
   vorpal
     .command("exit")
-    .action(function(args, cb){
-      try {
-        process.send('exit');
-      } catch(error){
-        Hive.error(error);
-      }
-      cb();
-    });
+    .action(functions.emitter('exit:hive'));
   
   if(Options.daemon){
     vorpal
-      .command("new hive [directory]")
+      .command("new [directory]")
       .description("create a new hive in [directory] or cwd")
       .option('-p, --port <port>', 'port to run the new hive on')
       .action(functions.emitter('new:hive'));
     vorpal
-      .command("enter hive <id>")
+      .command("enter <id>")
       //.option('-i, --id <id>', 'the hive\'s id (directory is ignored)')
       .description("enter the hive of a directory or hiveID")
       .action(functions.emitter('enter:hive'))
+    vorpal
+      .command("retire <id>")
+      //.option('-i, --id <id>', 'the hive\'s id (directory is ignored)')
+      .description("retire the hive by id")
+      .action(functions.emitter('retire:hive'))
   } else {
     vorpal.delimiter(delimiter).show();
   }
