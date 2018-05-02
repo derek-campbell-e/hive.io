@@ -11,6 +11,52 @@ module.exports = function ServerRoutes(Hive, Server, App, TokenAuth){
     });
   });
 
+  App.get("/drones", function(req, res){
+    Hive.emit('ls:drones', {}, function(json){
+      res.json(json);
+    });
+  });
+
+  App.get("/next/:drone", function(req, res){
+    Hive.emit('next:drone', {mind: req.params.drone}, function(json){
+      res.json(json);
+    });
+  });
+
+  App.get("/fire/:drone", function(req, res){
+    Hive.emit('fire:drone', {mind: req.params.drone}, function(json){
+      res.json(json);
+    });
+  });
+
+  App.get("/reload", function(req, res){
+    Hive.emit("reload", {}, function(){
+      res.json({status: 'hive has been reloaded'});
+    });
+  });
+
+  App.get("/retire", function(req, res){
+    Hive.emit("retire:hive", {}, function(){
+      res.json({status: 'hive has been retired...'});
+    });
+  });
+
+  App.get("/start/:drone", function(req, res){
+    let method = 'start:drone';
+    let key = 'mind';
+    if(req.params.drone.indexOf(',')){
+      method = 'start:drones';
+      key = 'minds';
+      req.params.drone = req.params.drone.split(",");
+    }
+    let args = {};
+    args.options = {};
+    args[key] = req.params.drone;
+    Hive.emit(method, args, function(json){
+      res.json(json);
+    });
+  });
+
   App.post("/authenticate", function(req, res){
     let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     Server.log(`Authentication request from ip: ${ip}`);

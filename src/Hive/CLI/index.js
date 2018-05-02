@@ -115,7 +115,7 @@ module.exports = function CLI(Hive, Options){
       .option('-p, --port <port>', 'port to run the new hive on')
       .action(functions.emitter('new:hive'));
     vorpal
-      .command("enter <id>")
+      .command("enter")
       //.option('-i, --id <id>', 'the hive\'s id (directory is ignored)')
       .description("enter the hive of a directory or hiveID")
       .action(functions.emitter('enter:hive'))

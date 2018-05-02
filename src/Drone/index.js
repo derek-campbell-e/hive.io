@@ -236,8 +236,13 @@ module.exports = function Drone(Hive, Mind){
   // this function should run the drone immediately returning the worker's result
   // TODO: all
   drone.fire = function(args, callback){
+    drone.log("firing drone immediately...");
     let boundedFunction = createBoundedFunction('fire', function(){
-      callback(common.stdFormatter.apply(common, arguments));
+      let json = {
+        drone: drone.export(),
+        result: common.stdFormatter.apply(common, arguments)
+      };
+      callback(json);
     });
     boundedFunction.call();
   };

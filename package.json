@@ -6,12 +6,13 @@
   "scripts": {
     "test": "USERNAME=admin PASSWORD=pass DEBUG=*,-node*,-socket*,-exp*,-snap*,-eng*,-body* nodemon index.js --ignore **/Daemon",
     "start": "USERNAME=admin PASSWORD=pass nodemon index.js --ignore **/drones/",
-    "socket": "DEBUG=*,-node*,-socket*,-exp*,-snap*,-eng* nodemon src/Hive/Socket/tester.js",
     "daemon": "nodemon src/Hive/Daemon",
-    "detached": "USERNAME=admin PASSWORD=pass nohup nodemon index.js &"
+    "detached": "USERNAME=admin PASSWORD=pass nohup nodemon index.js &",
+    "postinstall": "node ./src/Hive/Daemon/mkbin.js",
+    "binref": "nodemon --exec \"sudo npm install -g . && killall -9 node \" "
   },
   "bin": {
-    "hive": "./src/Hive/Daemon/index.js"
+    "hive": "src/Hive/Daemon/index.js"
   },
   "author": "",
   "license": "ISC",
