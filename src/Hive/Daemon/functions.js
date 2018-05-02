@@ -93,15 +93,14 @@ module.exports = function DaemonFunctions(Daemon){
 
     let onReady = function(pid, data){
       if(hive.pid === pid){
-        Daemon.cli.log("ASDADASDASDASD");
-        console.log("WE GOT THE MESSAGE!!!!!!");
         Daemon.removeListener('ready', onReady);
         args.data = data;
         args.pid = hive.pid;
         hive.unref();
         Daemon.createAuthFile(args, callback);
       } else {
-        Daemon.cli.log("UH PHHHASDA");
+        Daemon.cli.log("Unable to connect to host...");
+        callback();
       }
     };
 
