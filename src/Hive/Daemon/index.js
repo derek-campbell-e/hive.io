@@ -48,6 +48,7 @@ module.exports = function Daemon(){
   
   io.on('connection', function(socket){
     socket.once('ready', function(){
+      daemon.cli.log("WHAT THE FUCK");
       daemon.emit.apply(daemon, ['ready', ...arguments]);
     });
   });
