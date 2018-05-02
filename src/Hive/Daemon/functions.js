@@ -84,7 +84,6 @@ module.exports = function DaemonFunctions(Daemon){
     args.options.port = args.options.port || 5000;
     let hive = spawn(`node`, [hiveIOPath, '--port', args.options.port || 5000, '--detached', true, "--daemon", "4200"], {
       cwd: cwd,
-      shell: true,
       detached: true,
       stdio: 'ignore'
     });
