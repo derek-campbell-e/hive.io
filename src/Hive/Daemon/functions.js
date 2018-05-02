@@ -101,6 +101,8 @@ module.exports = function DaemonFunctions(Daemon){
         args.pid = hive.pid;
         hive.unref();
         Daemon.createAuthFile(args, callback);
+      } else {
+        Daemon.cli.log("UH PHHHASDA");
       }
     };
 
