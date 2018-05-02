@@ -94,6 +94,7 @@ module.exports = function DaemonFunctions(Daemon){
 
     let onReady = function(pid, data){
       if(hive.pid === pid){
+        console.log("WE GOT THE MESSAGE!!!!!!");
         Daemon.removeListener('ready', onReady);
         args.data = data;
         args.pid = hive.pid;
