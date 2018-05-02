@@ -63,10 +63,13 @@ module.exports = function DaemonFunctions(Daemon){
     }
     currentData[args.data.id] = data;
     fs.mkdir(binPath, function(error){
-      if(error.code === 'EEXIST'){
-      } else if (error) {
-        throw error;
-      } 
+      if(error){
+        if(error.code === 'EEXIST'){
+
+        } else {
+          throw error;
+        }
+      }
       fs.writeFile(path.join(binPath, filename), JSON.stringify(currentData, null, 4), function(error){
         if(error) throw error;
         Daemon.cli.log(args.data.id);
@@ -90,11 +93,15 @@ module.exports = function DaemonFunctions(Daemon){
 
     let onReady = function(pid, data){
       if(hive.pid === pid){
+        Daemon.cli.log("ASDADASDASDASD");
+        console.log("WE GOT THE MESSAGE!!!!!!");
         Daemon.removeListener('ready', onReady);
         args.data = data;
         args.pid = hive.pid;
         hive.unref();
         Daemon.createAuthFile(args, callback);
+      } else {
+        Daemon.cli.log("UH PHHHASDA");
       }
     };
 
