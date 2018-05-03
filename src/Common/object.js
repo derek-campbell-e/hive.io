@@ -7,7 +7,7 @@ module.exports = function CommonObject(Class, Mind, Options){
   Module.setMaxListeners(0);
 
   Module.meta = {};
-  Module.meta.id = common.uuid();
+  Module.meta.id = Options.id || common.uuid();
   Module.meta.class = Class || "object";
   Module.meta.mind = Mind || "default";
   Module.meta.debugName = function(){

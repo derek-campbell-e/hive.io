@@ -15,14 +15,35 @@ module.exports = function CLI(Daemon){
 
   // functions for detached hive instance
   vorpal
+    .command("logs [object]")
+    .option('-t, --tail <num>', 'tail <number> of logs')
+    .option('-i, --id <id>', 'specify hive id')
+    .description("show the logs for [object] or show all logs")
+    .action(requestHandler('show:logs'));
+
+  vorpal
+    .command("errors [object]")
+    .option('-t, --tail <num>', 'tail <number> of logs')
+    .option('-i, --id <id>', 'specify hive id')
+    .description("show the logs for [object] or show all logs")
+    .action(requestHandler('show:errors'));
+
+  vorpal
+    .command("results [object]")
+    .option('-t, --tail <num>', 'tail <number> of logs')
+    .option('-i, --id <id>', 'specify hive id')
+    .description("show the logs for [object] or show all logs")
+    .action(requestHandler('show:results'));
+
+  vorpal
     .command("stats")
     .option('-i, --id <id>', 'specify hive id')
     .action(requestHandler('stats'));
 
   vorpal
     .command("spawn drone <mind>")
-    .option('-i, --id <id>', 'specify hive id')
     .description("spawn a drone with <mind>")
+    .option('-i, --id <id>', 'specify hive id')
     .option('-s, --start', 'start drone once loaded')
     .option('-n, --now', 'fire drone now, (must be loaded)')
     .action(requestHandler('spawn:drone'));
@@ -119,7 +140,8 @@ module.exports = function CLI(Daemon){
   vorpal
     .catch('[words...]')
     .action(function(args, callback){
-      this.log(args.words);
+      this.log(args.words.join(" ")+ " is not a valid command");
+      callback();
     });
   
   vorpal

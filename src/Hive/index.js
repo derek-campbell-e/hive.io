@@ -3,10 +3,10 @@ module.exports = function Hive(Options){
   const common = require('../Common');
   const debug = require('debug')('hive');
   const options = common.options(Options);
+  options.hiveID = common.uuid();
   global['options'] = options; 
   
-
-  let hive = common.object('hive');
+  let hive = common.object('hive', 'default', {id: options.hiveID});
   hive.token = require('./Token')();
   
   hive.options = options;

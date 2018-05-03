@@ -8,8 +8,11 @@ module.exports = function Daemon(){
   const request = require('request');
   const URL = require('url').URL;
   let clientio = require('socket.io-client');
+  const daemonID = common.uuid();
+  global['options'] = {};
+  options.hiveID = 'DAEMON';
 
-  let daemon = common.object('hive', 'daemon');
+  let daemon = common.object('hive', 'daemon', {id: daemonID});
   daemon.meta.port = port;
   
   // the active hive socket we'll connect to when we use the enter command

@@ -7,8 +7,28 @@ module.exports = function CLI(Hive, Options){
 
   // our functions module
   let functions = require('./functions')(vorpal, Hive);
+
+  vorpal
+    .command("logs [object]")
+    .option('-t, --tail <num>', 'tail <number> of logs')
+    .description("show the logs for [object] or show all logs")
+    .action(functions.emitter('show:logs'));
+
+  vorpal
+    .command("errors [object]")
+    .option('-t, --tail <num>', 'tail <number> of logs')
+    .description("show the logs for [object] or show all logs")
+    .action(functions.emitter('show:errors'));
+
+  vorpal
+    .command("results [object]")
+    .option('-t, --tail <num>', 'tail <number> of logs')
+    .description("show the logs for [object] or show all logs")
+    .action(functions.emitter('show:results'));
   
-  vorpal.command("stats").action(functions.emitter('stats'));
+  vorpal
+    .command("stats")
+    .action(functions.emitter('stats'));
 
   vorpal
     .command("spawn drone <mind>")

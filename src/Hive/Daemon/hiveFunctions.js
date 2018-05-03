@@ -169,11 +169,13 @@ module.exports = function HiveFunctions(Daemon, Io){
       cli.log("No active hive is connected...");
       return Daemon.cli.emit('delimiter', 'hive-daemon$', function(){
         callback();
+        process.exit(0);
       });
     }
     Daemon.meta.activeHive.disconnect();
     return Daemon.cli.emit('delimiter', 'hive-daemon$', function(){
       callback();
+      process.exit(0);
     });
   };
 

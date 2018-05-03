@@ -13,9 +13,15 @@ module.exports = function MakeLogger(Module, Options){
   let logpaths = {};
   let defaultLogFolder = path.join(process.cwd(), "./logs");
 
-  logpaths.stdout = path.join(Options.logFolder || defaultLogFolder, 'stdout.txt');
-  logpaths.stderr = path.join(Options.logFolder || defaultLogFolder, 'stderr.txt');
-  logpaths.results = path.join(Options.logFolder || defaultLogFolder, 'results.txt');
+  logpaths.stdout = path.join(Options.logFolder || defaultLogFolder, options.hiveID + '.stdout.txt');
+  logpaths.stderr = path.join(Options.logFolder || defaultLogFolder, options.hiveID + '.stderr.txt');
+  logpaths.results = path.join(Options.logFolder || defaultLogFolder, options.hiveID + '.results.txt');
+
+  options.logs = {
+    'stdout': logpaths.stdout,
+    'stderr': logpaths.stderr,
+    'results': logpaths.results
+  };
 
   if(typeof Module.emit === "undefined"){ Module.emit = function(){} };
 
