@@ -15,6 +15,7 @@ module.exports = function Worker(Hive, Drone, Task, Args){
     worker.meta.hasStarted = false;
     worker.result.apply(Drone, results);
     setTimeout(function(){
+      worker.log("attempting to retire...");
       worker.prepareForRetirement();
     }, 10000);
   };

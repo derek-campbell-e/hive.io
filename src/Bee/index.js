@@ -35,15 +35,19 @@ module.exports = function Bee(Hive, Class, Mind){
   };
 
   // our function to garbage collect and then retire the bee safely
-  bee.prepareForRetirement = function(){
-    bee.gc();
-    bee.retire();
+  bee.prepareForRetirement = function(debugName){
+    try {
+      bee.gc();
+      bee.retire();
+    } catch(error) {
+      Hive.error("An error occured during prep for retirement", error, debugName);
+    }
   };
 
   // our private retirement function, we bind this to the hive's "gc" event
-  let prepareForRetirement = function(){
+  let prepareForRetirement = function(debugName){
     if(bee){
-      return bee.prepareForRetirement();
+      return bee.prepareForRetirement(debugName);
     } else {
       debug("NO LONGER HERE");
     }
@@ -51,7 +55,7 @@ module.exports = function Bee(Hive, Class, Mind){
 
   // function where we listen to hive events
   let bind = function(){
-    Hive.once('gc', prepareForRetirement);
+    Hive.once('gc', prepareForRetirement.bind(bee, bee.meta.debugName()));
   };
 
   // our initializer

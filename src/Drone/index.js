@@ -170,8 +170,9 @@ module.exports = function Drone(Hive, Mind){
         clearSchedule = schedule.clear.bind(schedule);
       break;
       case 'on':
-        schedule = Hive.on("drone:"+scheduleValue, boundedFunction);
-        clearSchedule = Hive.removeListener.bind(Hive, scheduleValue, boundedFunction);
+        let emitKey = "drone:"+scheduleValue;
+        schedule = Hive.on(emitKey, boundedFunction);
+        clearSchedule = Hive.removeListener.bind(Hive, emitKey, boundedFunction);
       break;
     }
     let scheduledObject = {
@@ -208,6 +209,7 @@ module.exports = function Drone(Hive, Mind){
     for(let scheduleType in drone.schedules){
       let schedule = drone.schedules[scheduleType];
       if(!schedule.clearInterval){
+        drone.log("unable to clear schedule:", scheduleType);
         continue;
       }
       schedule.clearInterval();
