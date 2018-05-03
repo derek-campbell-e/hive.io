@@ -68,7 +68,7 @@ module.exports = function CLI(Hive, Options){
     .action(functions.emitter('retire:drones'));
   
   vorpal
-    .command("next <mind> [number]")
+    .command("next <drone> [number]")
     .description("show the next fire times for <drone>")
     .action(functions.emitter('next:drone'));
   

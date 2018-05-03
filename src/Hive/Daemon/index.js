@@ -1,102 +1,106 @@
 #!/usr/bin/env node
 module.exports = function Daemon(){
+  const port = 4200;
   const common = require('../../Common');
-  const io = require('socket.io')(4200);
+  const io = require('socket.io')(port);
   const savedArguments = [...process.argv];
-  console.log(savedArguments, __dirname, __filename, process.cwd(), process.execPath);
   const parsedArguments = require('vorpal')().parse([...savedArguments], {use: 'minimist'});
-  
+  const request = require('request');
+  const URL = require('url').URL;
+  let clientio = require('socket.io-client');
+
   let daemon = common.object('hive', 'daemon');
-  daemon.remote = require('../Remote')(daemon);
-  let cli = require('../CLI')(daemon, {daemon: true});
-  daemon.cli = cli;
+  daemon.meta.port = port;
+  
+  // the active hive socket we'll connect to when we use the enter command
+  daemon.meta.activeHive = null;
 
-  require('./functions')(daemon);
+  require('./hiveFunctions')(daemon, io);
+  daemon.cli = require('./cli')(daemon);
+  
+  daemon.processRequest = function(event, args, callback){
+    let cli = this;
+    if(daemon.meta.activeHive){
+      daemon.meta.activeHive.emit('remote:command', event, args, function(data){
+        cli.log(data);
+        callback();
+      });
+      return;
+    }
 
-  daemon.processCommandMessage = function(command, args, callback){
-    const cli = this;
+    daemon.prepareForDetachedCommand(args, function(error, host){
+      if(error){
+        cli.log(error);
+        callback();
+        return false;
+      }
+
+      let socket = clientio(host);
+
+      let errorFunction = function(error){
+        cli.log("an error occured connecting to the hive: " + error);
+        callback();
+      };
+
+      let disconnectFunction = function(reason){
+        cli.log("hive instance has disconnected. Reason: " + reason);
+        callback();
+      };
+
+      let removeListeners = function(socket){
+        socket.removeListener('connect_error', errorFunction);
+        socket.removeListener('error', errorFunction);
+        socket.removeListener('disconnect', disconnectFunction);
+      };
+
+      socket.once('connect', function(){
+        socket.emit('remote:command', event, args, function(data){
+          cli.log(data);
+          removeListeners(socket);
+          socket.disconnect();
+          callback();
+        });
+      });
+
+      socket.once('connect_error', errorFunction);
+      socket.once('error', errorFunction);
+      socket.once('disconnect', disconnectFunction);
+    });
+  };
+
+
+  
+  let init = function(){
+    
+    let command = parsedArguments._[0]; // the first should be 'hive'
     switch(command){
-      case 'new:hive':
-        daemon.spawnHive(args, callback);
-      break;
-      case 'enter:hive':
-        daemon.enterHive(args, callback);
-      break;
-      case 'exit:hive':
-        if(daemon.localHive){
-          daemon.localHive.close();
-          daemon.localHive = null;
-          daemon.cli.delimiter("hive-daemon$").show();
-          return callback();
-        }
-        process.exit(0);
-
-      break;
-      case 'retire:hive':
-        daemon.retireHive(args, callback);
-      break;
-      default:
-        /*
-        if(!daemon.localHive){
-          return callback("Unable to run command...");
-        }
-        daemon.remote.emitToLocalHost(null, "remote:command", command, args, callback);
-        */
-        daemon.enterHiveDetached(args, function(error){
-          if(error){
-            return callback(error);
+      case 'enter':
+        daemon.cli.emit('delimiter', 'hive-daemon$', function(){
+          let args = [...savedArguments];
+         
+          args.shift();
+          args.shift();
+          for (let i = 0; i < args.length; ++i) {
+            if (i === 0) {
+              continue;
+            }
+            if (args[i].indexOf(' ') > -1) {
+              args[i] = `"${args[i]}"`;
+            }
           }
-          daemon.remote.emitToLocalHost(null, "remote:command", command, args, callback);
+
+          daemon.cli.vorpal.exec(args.join(" "), function(){
+
+          });
         });
       break;
-    }
-  };
-
-  let replaceParse = function(){
-    cli.parse = function(argv, options){
-      options = options || {};
-      var args = argv;
-      var result = this;
-      args.shift();
-      args.shift();
-      for (let i = 0; i < args.length; ++i) {
-        if (i === 0) {
-          continue;
-        }
-        if (args[i].indexOf(' ') > -1) {
-          args[i] = `"${args[i]}"`;
-        }
-      }
-      this.exec(args.join(' '), function (err) {
-        this.log(err);
-      });
-      return result;
-    };
-  };
-
-  
-  io.on('connection', function(socket){
-    socket.once('ready', function(){
-      daemon.emit.apply(daemon, ['ready', ...arguments]);
-    });
-  });
-  
-
-  let init = function(){
-    let firstCommand = parsedArguments._[0]; // the first should be 'hive'
-    switch(firstCommand){
-      case 'new':
-      case 'retire':
-        cli.parse(savedArguments);
-      break;
-      case 'enter':
-        cli.delimiter("hive-daemon$").show().exec(parsedArguments._.join(" "));
-      break;
       default:
-        replaceParse();
-        cli.delimiter("hive-daemon$").show().parse(savedArguments);
+        daemon.cli.vorpal.parse(savedArguments);
       break;
     }
+    
+    daemon.garbageCollection();
+
     return daemon;
   };
 

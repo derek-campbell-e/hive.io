@@ -13,6 +13,7 @@ module.exports = function Socket(Hive, Server, Cli){
   // TODO: socket authentication middleware
 
   let socketAuthentication = function(socket, next){
+    return next();
     let token = socket.handshake.query.token;
     Server.token.verify(token, function(error, data){
       if(!error){
@@ -24,6 +25,7 @@ module.exports = function Socket(Hive, Server, Cli){
   };
 
   let socketVerifyPerPacket = function(socket, packet, next){
+    return next();
     Server.token.verify(socket[tokenSymbol], function(error, data){
       if(!error){
         return next();

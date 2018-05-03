@@ -231,10 +231,10 @@ module.exports = function(Hive, Queen, Bees, Locator, Cache){
   };
 
   Queen.nextDroneFire = function(args, callback){
-    let cachedMindName = Locator.searchMinds(args.mind);
+    let cachedMindName = Locator.searchMinds(args.drone || args.mind);
     if(!cachedMindName){
       let json = {
-        error: `no drone exists by that name ${args.mind}`
+        error: `no drone exists by that name ${args.mind || args.drone}`
       };
       return callback(json, false);
     }
