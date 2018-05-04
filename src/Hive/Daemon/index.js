@@ -98,7 +98,7 @@ module.exports = function Daemon(){
         });
       break;
       default:
-        daemon.cli.vorpal.parse(savedArguments);
+        daemon.cli.vorpal.delimiter("").show().parse(savedArguments);
       break;
     }
     

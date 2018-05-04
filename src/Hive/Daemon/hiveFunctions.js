@@ -270,10 +270,14 @@ PID: ${hive.pid}
     const hiveIOPath = path.join(__dirname, '../../../index.js');
     args.directory = path.resolve(args.directory || process.cwd());
     args.options.port = args.options.port || 4204;
+    let env = require('extend')(true, process.env);
+    env.USERNAME = args.username;
+    env.PASSWORD = args.password;
     let hive = spawn(`node`, [hiveIOPath, '--port', args.options.port, '--detached', true, "--daemon", Daemon.meta.port], {
       cwd: args.directory,
       detached: true,
-      stdio: 'ignore'
+      stdio: 'ignore',
+      env: env
     });
 
     let onReady = function(pid, data){

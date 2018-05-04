@@ -123,13 +123,55 @@ module.exports = function CLI(Daemon){
     .description("show drones found/cached")
     .action(requestHandler('ls:drones'));
 
+  vorpal
+    .command("link <host>")
+    .option('-i, --id <id>', 'specify hive id')
+    .description("link this hive to another hive instance")
+    .option('-b, --bi', 'use this flag for bi-directional communication, default is one-way [linkee blasts to linked only]')
+    .action(requestHandler('link:hive'));
+
+  vorpal
+    .command("blast <event> [args...]")
+    .option('-i, --id <id>', 'specify hive id')
+    .description("blast a message from this hive to all hives connected")
+    .action(requestHandler('blast:message'))
+
   
   // functions to create / modify / destroy hive instances
   vorpal
     .command("new [directory]")
     .description("create a new hive in [directory] or cwd")
     .option('-p, --port <port>', 'port to run the new hive on')
-    .action(Daemon.spawnHive);
+    .action(function(args, callback){
+      let cli = this;
+      let promptQuestions = [];
+      let usernamePrompt = {
+        type: 'input',
+        name: 'username',
+        message: 'Please enter username: ',
+      };
+  
+      let passwordPrompt = {
+        type: 'password',
+        name: 'password',
+        message: 'Please enter password: '
+      };
+  
+      if(!args.password){
+        promptQuestions.push(passwordPrompt);
+      }
+      if(!args.username){
+        promptQuestions.unshift(usernamePrompt);
+      }
+      
+      cli.prompt(promptQuestions, function(result){
+        let username = result.username || args.username || false;
+        let password = result.password || args.password || false;
+        args.username = username;
+        args.password = password;
+        Daemon.spawnHive.call(cli, args, callback);
+      });
+    });
 
   vorpal
     .command("enter [directory]")
