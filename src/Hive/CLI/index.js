@@ -102,6 +102,11 @@ module.exports = function CLI(Hive, Options){
     .command("ls drones")
     .description("show drones found/cached")
     .action(functions.emitter('ls:drones'));
+
+  vorpal
+    .command("ls network")
+    .description("show hives that are linekd in our network")
+    .action(functions.emitter('ls:network'));
   
   vorpal
     .command("xrem")
@@ -117,11 +122,22 @@ module.exports = function CLI(Hive, Options){
     .command("repl <host>")
     .description("replicate drones and settings to another hive")
     .action(functions.replicateIntoHive);
+
+  vorpal
+    .command("link <host>")
+    .description("link this hive to another hive instance")
+    .option('-b, --bi', 'use this flag for bi-directional communication, default is one-way [linkee blasts to linked only]')
+    .action(functions.emitter('link:hive'));
   
   vorpal
     .command("emit <droneEvent> [args...]")
     .description("emit a drone event message with args")
     .action(functions.emitter('emit:drone'));
+
+  vorpal
+    .command("blast <event> [args...]")
+    .description("blast a message from this hive to all hives connected")
+    .action(functions.emitter('blast:message'))
   
   vorpal.find("exit").remove();
 
@@ -129,25 +145,9 @@ module.exports = function CLI(Hive, Options){
     .command("exit")
     .action(functions.emitter('exit:hive'));
   
-  if(Options.daemon){
-    vorpal
-      .command("new [directory]")
-      .description("create a new hive in [directory] or cwd")
-      .option('-p, --port <port>', 'port to run the new hive on')
-      .action(functions.emitter('new:hive'));
-    vorpal
-      .command("enter")
-      //.option('-i, --id <id>', 'the hive\'s id (directory is ignored)')
-      .description("enter the hive of a directory or hiveID")
-      .action(functions.emitter('enter:hive'))
-    vorpal
-      .command("retire <id>")
-      //.option('-i, --id <id>', 'the hive\'s id (directory is ignored)')
-      .description("retire the hive by id")
-      .action(functions.emitter('retire:hive'))
-  } else {
-    vorpal.delimiter(delimiter).show();
-  }
+
+  vorpal.delimiter(delimiter).show();
+  
 
   return vorpal;
 };

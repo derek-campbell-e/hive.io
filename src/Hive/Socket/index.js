@@ -1,9 +1,10 @@
-module.exports = function Socket(Hive, Server, Cli){
+module.exports = function Socket(Hive, Server, Cli, HiveNetwork){
   // our includes
   const debug = require('debug')('hive:server');
   const common = require('../../Common');
   const io = require('socket.io')(Server.http);
   const daemon = require('socket.io-client');
+  const linker = require('socket.io-client');
 
   // our socket manager object
   let sm = common.object('hive', 'socket-manager');
@@ -37,20 +38,24 @@ module.exports = function Socket(Hive, Server, Cli){
   // our key/symbol map for socket events, we dont want
   // socket events to be called by anyone, though this may prove insecure
   let events = {
-    'stats': Symbol('stats'),
     'disconnect': Symbol('socketDisconnect'),
     'begin:replication': Symbol("beginReplication"),
     'replication:data': Symbol("replicationData"),
     'remote:command': Symbol('remoteCommand'),
+    'begin:link': 'begin:link',
+    'network:blast': 'network:blast',
   };
 
   // our binder to listen to socket events by key and run the function by symbol
   let socketBinder = function(socket){
-    socket.use(socketVerifyPerPacket.bind(sm, socket));
+    if(socket.use){
+      socket.use(socketVerifyPerPacket.bind(sm, socket));
+    }
+    
     for(let eventKey in events){
       let funcSymbol = events[eventKey];
       if(typeof sm[funcSymbol] !== 'function'){
-        debug("not a function");
+        debug("not a function", funcSymbol);
         continue;
       }
       socket.on(eventKey, function(){
@@ -62,11 +67,6 @@ module.exports = function Socket(Hive, Server, Cli){
 
   // our private sockets object
   let activeSockets = {};
-
-  sm[events.stats] = function(socket, callback){
-    sm.log("we got a stats message");
-    Hive.emit('stats', {}, callback);
-  };
 
   sm[events.disconnect] = function(socket, close){
     activeSockets[socket.id] = null;
@@ -93,6 +93,33 @@ module.exports = function Socket(Hive, Server, Cli){
     });
   };
 
+  sm[events["begin:link"]] = function(socket, hiveID, options, callback){
+    sm.log("received link request from", hiveID);
+    HiveNetwork.addHive(socket, hiveID, options);
+    callback(Hive.meta.id);
+  };
+
+  sm[events['network:blast']] = function(socket, event, args){
+    sm.log("received network blast from", socket.id, HiveNetwork.lookup(socket));
+    if(HiveNetwork.lookup(socket)){
+      sm.log("we have this hive in our network, so lets process the message...", event);
+      args.args = args.args || [];
+      Hive.emit.apply(Hive, [event, ...args.args]);
+    }
+  };
+
+  sm.linkHive = function(args, callback){
+    sm.log(`linking ${args.host} to current hive`);
+    let socket = linker(args.host);
+    if(args.options.bi){
+      socket.once('connect', function(){
+        activeSockets[socket.id] = socket;
+        socketBinder(socket);
+      });
+    }
+    HiveNetwork.addHiveRoutine(args, socket, callback);
+  };
+
   sm.notifyDaemon = function(data, callback){
     let daemonurl = `http://localhost:${options.daemon}`;
     sm.log(daemonurl);
@@ -112,6 +139,7 @@ module.exports = function Socket(Hive, Server, Cli){
       socketBinder(socket);
     });
     io.use(socketAuthentication);
+    Hive.on('link:hive', sm.linkHive);
   };
 
   // our initializer

@@ -7,6 +7,11 @@ module.exports = function Hive(Options){
   global['options'] = options; 
   
   let hive = common.object('hive', 'default', {id: options.hiveID});
+  let bees = {};
+  let queen = null;
+
+  let network = require('./Network')(hive);
+
   hive.token = require('./Token')();
   
   hive.options = options;
@@ -24,10 +29,7 @@ module.exports = function Hive(Options){
   };
 
   let server = require('./Server')(hive);
-  let socketManager = require('./Socket')(hive, server, cli);
-
-  let bees = {};
-  let queen = null;
+  let socketManager = require('./Socket')(hive, server, cli, network);
 
   hive.processCommandMessage = function(command, args, callback){
     if(hive.remote.meta.isUsingRemote){
@@ -67,12 +69,6 @@ module.exports = function Hive(Options){
   let init = function(){
     bind();
     hive.setMaxListeners(0);
-
-    if(options.daemonMode){
-      hive.cli = cli;
-      hive.log("running hive in daemon mode...");
-      return hive;
-    }
 
     hive.log("running hive with options", options);
     queen = require('../Queen')(hive, bees);

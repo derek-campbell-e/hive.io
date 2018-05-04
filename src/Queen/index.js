@@ -169,6 +169,7 @@ module.exports = function Queen(Hive, Bees){
   // this function is called after the hive emits a "reload" event
   // we rebuild our cache and the active drones do their own reloading
   queen.reload = function(args, callback){
+    callback = callback || function(){};
     //console.log(this, cli);
     queen.rebuildCache();
     Hive.cli.log('reloading...');
@@ -216,6 +217,7 @@ module.exports = function Queen(Hive, Bees){
   };
 
   queen.emitDroneMessage = function(args, callback){
+    callback = callback || function(){};
     Hive.emit.apply(Hive, [`drone:${args.droneEvent}`, ...args.args, callback]);
   };
 
