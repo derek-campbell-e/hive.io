@@ -73,6 +73,7 @@ module.exports = function CLI(Hive, Options){
 
   vorpal
     .command("fire drone <mind> [args...]")
+    .option('-s, --schedule <schedule>', 'fire a particular schedule [fire] is default')
     .description("run a drone immediately")
     .action(functions.emitter('fire:drone'));
   

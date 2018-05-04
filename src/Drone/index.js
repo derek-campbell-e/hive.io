@@ -48,10 +48,10 @@ module.exports = function Drone(Hive, Mind){
   };
 
   // private function that gets bound to a timer, this gets executed when a timer fires
-  let createBoundedFunction = function(scheduleKey, callback){
+  let spawnWorkerRoutine = function(scheduleKey, callback){
     callback = callback || function(){};
     // the function to return
-    let func = function(drone, scheduleKey, callback, ...args){
+    let spawnWorker = function(drone, scheduleKey, callback, ...args){
       if(!drone.canStartNewThread()){
         return false;
       }
@@ -74,7 +74,7 @@ module.exports = function Drone(Hive, Mind){
       });
     };
     // return this function with the proper stuff bound to it
-    return func.bind(drone, drone, scheduleKey, callback);
+    return spawnWorker.bind(drone, drone, scheduleKey, callback);
   };
 
   let formatLaterTime = function(time){
@@ -140,16 +140,16 @@ module.exports = function Drone(Hive, Mind){
 
   // our function to create the timers that fire our function that creates a worker
   // we can use different types of timers for our needs
-  // hz: run every [Int] milliseconds
+  // hz: run every [Int] seconds
   // later: run on a text-based schedule via later: http://bunkat.github.io/later/parsers.html#text
-  // cron: run on a cron schedule via later: http://bunkat.github.io/later/parsers.html#cron
+  // cron: run on a cron schedule via later: http://bunkat.github.io/later/parsers.html#cron (seconds included)
   // on: run when the hive emits the specified event ("drone:"+[your event name])
   // we also include the function to remove the schedule in our returned object
   drone.createSchedule = function(scheduleType, scheduleValue, scheduleKey){
     let schedule = null;
     let clearSchedule = null;
     let parsed = null;
-    let boundedFunction = createBoundedFunction(scheduleKey);
+    let boundedFunction = spawnWorkerRoutine(scheduleKey);
     switch(scheduleType){
       case 'hz':
         parsed = later.parse.recur().every(scheduleValue).second();
@@ -236,10 +236,12 @@ module.exports = function Drone(Hive, Mind){
   };
 
   // this function should run the drone immediately returning the worker's result
-  // TODO: all
+  // the schedule type is "fire"
+  // TODO: option to change schedule to custom
   drone.fire = function(args, callback){
+    let schedule = args.options.schedule || 'fire';
     drone.log("firing drone immediately...");
-    let boundedFunction = createBoundedFunction('fire', function(){
+    let boundedFunction = spawnWorkerRoutine(schedule, function(){
       let json = {
         drone: drone.export(),
         result: common.stdFormatter.apply(common, arguments)

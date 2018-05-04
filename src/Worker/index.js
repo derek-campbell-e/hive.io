@@ -1,4 +1,6 @@
 module.exports = function Worker(Hive, Drone, Task, Args){
+  // TODO: spawn worker as a node.js fork process
+
   // our worker mind name is based off the drone it will be spawned from
   // and the schedule it is running on
   let mindName = Drone.mind + "<" + Drone.schedule + ">";
