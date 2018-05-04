@@ -12,6 +12,7 @@ module.exports = function Bee(Hive, Class, Mind){
   // our spawn function, we update our meta, and tell the hive that we spawned
   bee.spawn = function(){
     bee.meta.spawnedAt = common.timestamp();
+    bee.log("being spawned and entering the hive...");
     bind();
     Hive.didSpawnBee(bee);
   };
@@ -36,6 +37,7 @@ module.exports = function Bee(Hive, Class, Mind){
 
   // our function to garbage collect and then retire the bee safely
   bee.prepareForRetirement = function(debugName){
+    bee.log("preparing for retirement...");
     try {
       bee.gc();
       bee.retire();

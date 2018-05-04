@@ -15,6 +15,7 @@ module.exports = function Worker(Hive, Drone, Task, Args){
   // we log our results, and then retire the worker after 10 seconds
   worker.completionCallback = function(...results){
     worker.meta.hasStarted = false;
+    worker.log("finished our task and logging the result");
     worker.result.apply(Drone, results);
     setTimeout(function(){
       worker.log("attempting to retire...");
@@ -25,13 +26,20 @@ module.exports = function Worker(Hive, Drone, Task, Args){
   // this function starts our worker with the callback from the Drone class (to delete threads on completion)
   // the worker will start the task, and then run its own callback
   worker.start = function(callback){
+    worker.log("running our task...");
     worker.meta.hasStarted = true;
     callback = callback || function(){};
     // well add additional arguments for emitted events
-    Task.apply(Drone, [...Args, function(){
-      callback.apply(worker, arguments);
-      worker.completionCallback.apply(worker, arguments);
-    }]);
+    try {
+      Task.apply(Drone, [...Args, function(){
+        callback.apply(worker, arguments);
+        worker.completionCallback.apply(worker, arguments);
+      }]);
+    } catch(error) {
+      worker.error("An error occured running task:", error, 'Stack:', error.stack);
+      callback.apply(worker, [error]);
+      worker.completionCallback.apply(worker, [error]);
+    }
   };
 
   // our initializer

@@ -64,14 +64,35 @@ module.exports = function Drone(Hive, Mind){
       };
       // create the worker 
       let worker = require('../Worker')(Hive, droneExport, drone.mind.module.task, args);
+
+      drone.log("spawning worker", worker.meta.debugName());
+
       // add the worker to our threads
       drone.threads[worker.meta.id] = worker;
+
+      // our boolean for if a task has completed
+      let hasTaskFinished = false;
+
       // start the worker and when finished, delete the thread
       worker.start(function(){
+        hasTaskFinished = true;
+        drone.log("worker", worker.meta.debugName(), "has finished it's task");
         drone.threads[worker.meta.id] = null;
         delete drone.threads[worker.meta.id];
         callback.apply(callback, arguments);
       });
+
+      // create a timer for maxRunTime and if we have not finished the task normally, perform alt actions
+      setTimeout(function(){
+        if(!hasTaskFinished){
+          drone.log("our worker:", worker.meta.debugName(), "has not finished it's task, so time to retire it manually");
+          drone.threads[worker.meta.id] = null;
+          delete drone.threads[worker.meta.id];
+          worker.prepareForRetirement();
+          callback.apply(callback, arguments);
+        }
+      }, options.maxTaskRuntime);
+
     };
     // return this function with the proper stuff bound to it
     return spawnWorker.bind(drone, drone, scheduleKey, callback);
@@ -146,6 +167,7 @@ module.exports = function Drone(Hive, Mind){
   // on: run when the hive emits the specified event ("drone:"+[your event name])
   // we also include the function to remove the schedule in our returned object
   drone.createSchedule = function(scheduleType, scheduleValue, scheduleKey){
+    drone.log("creating schedule of type:", scheduleType, "with value:", scheduleValue, "using schedule key:", scheduleKey ||  "none");
     let schedule = null;
     let clearSchedule = null;
     let parsed = null;
@@ -223,6 +245,7 @@ module.exports = function Drone(Hive, Mind){
   // this starts the drone by creating the schedules and letting them run on their own time
   // TODO: run immediately by running the task when started
   drone.start = function(runImmediately){
+    drone.log("starting our schedules...");
     runImmediately = runImmediately || false;
     drone.meta.hasStarted = true;
     drone.schedule();
@@ -231,6 +254,7 @@ module.exports = function Drone(Hive, Mind){
   // this function stops the drone from creating new workers by unscheduling
   // TODO: stop all active workers on stop if desired
   drone.stop = function(){
+    drone.log("stopping all schedules");
     drone.meta.hasStarted = false;
     drone.unschedule();
   };
@@ -267,9 +291,8 @@ module.exports = function Drone(Hive, Mind){
   let init = function(){
     bind();
     loadMind();
+    drone.log("initializing...");
     drone.spawn();
-    drone.log("initializing a new drone...");
-    drone.log("entering the hive...");
     return drone;
   };
 

@@ -39,7 +39,7 @@ module.exports = function Hive(Options){
       } 
       return ableToEmitMessage;
     }
-    hive.log("emitting message to local hive");
+    hive.log("processing command", command, "with args:", args);
     hive.emit(command, args, callback);
   };
 

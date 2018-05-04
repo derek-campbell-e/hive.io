@@ -177,8 +177,7 @@ module.exports = function Replicator(Hive, Socket){
         return;
       }
       let fullFolderPath = path.join(basePath, folder);
-      let commandArgs = stringArgv("npm install");
-      let spawn = child_process.spawn(commandArgs[0], commandArgs.slice(1), {cwd: fullFolderPath});
+      let spawn = child_process.spawn("npm", ['install'], {cwd: fullFolderPath});
       spawn.on('close', loop);
     }
     loop();
