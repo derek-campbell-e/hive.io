@@ -93,9 +93,11 @@ module.exports = function Socket(Hive, Server, Cli, HiveNetwork){
     });
   };
 
-  sm[events["begin:link"]] = function(socket, hiveID, options, callback){
+  sm[events["begin:link"]] = function(socket, hiveID, args, callback){
     sm.log("received link request from", hiveID);
-    HiveNetwork.addHive(socket, hiveID, options);
+    args.host = 'SELF';
+    args.callee = Hive.meta.id;
+    HiveNetwork.addHive(socket, hiveID, args);
     callback(Hive.meta.id);
   };
 
@@ -117,6 +119,7 @@ module.exports = function Socket(Hive, Server, Cli, HiveNetwork){
         socketBinder(socket);
       });
     }
+    args.caller = Hive.meta.id;
     HiveNetwork.addHiveRoutine(args, socket, callback);
   };
 

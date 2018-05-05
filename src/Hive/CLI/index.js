@@ -130,6 +130,13 @@ module.exports = function CLI(Hive, Options){
     .action(functions.emitter('link:hive'));
   
   vorpal
+    .command("unlink <hostOrID>")
+    .description("unlink this hive to another hive instance")
+    .option('-a, --all', 'unlink all linked hives')
+    .option('-b, --bi', 'use this flag for bi-directional communication, default is one-way [linkee blasts to linked only]')
+    .action(functions.emitter('unlink:hive'));
+  
+  vorpal
     .command("emit <droneEvent> [args...]")
     .description("emit a drone event message with args")
     .action(functions.emitter('emit:drone'));
