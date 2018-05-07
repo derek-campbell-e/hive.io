@@ -102,8 +102,8 @@ module.exports = function Socket(Hive, Server, Cli, HiveNetwork){
   };
 
   sm[events['network:blast']] = function(socket, event, args){
-    sm.log("received network blast from", socket.id, HiveNetwork.lookup(socket));
-    if(HiveNetwork.lookup(socket)){
+    sm.log("received network blast from", socket.id, HiveNetwork.lookupBySocket(socket));
+    if(HiveNetwork.lookupBySocket(socket)){
       sm.log("we have this hive in our network, so lets process the message...", event);
       args.args = args.args || [];
       Hive.emit.apply(Hive, [event, ...args.args]);

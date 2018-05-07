@@ -4,13 +4,26 @@ module.exports = function Locator(Queen, Cache){
   const common = require('../Common');
   const path = require('path');
   const glob = require('multi-glob').glob;
+  const watch = require('watch');
 
   // our locator module
-  let loc = {};
+  let loc = common.object('queen', 'locator');
+
+  loc.fileDidChange = function(f, curr, prev){
+    if(typeof f == "object" && prev === null && curr === null){
+      return;
+    }
+    loc.log("got a file change", f);
+    loc.emit('fileDidChange', f);
+  };
+
+  loc.watchForFileChanges = function(){
+    watch.watchTree(options.droneFolder, {ignoreDirectoryPattern: '/node_modules/', interval: 1}, loc.fileDidChange);
+  };
 
   // cache the drone file / folder found
   loc.cacheMeta = function(droneMindFile){
-    Queen.log(droneMindFile);
+    loc.log("catching drone located at:", droneMindFile);
     let droneMind = path.basename(droneMindFile, '.js');
     let meta = {}
     meta.name = droneMind;
@@ -34,7 +47,7 @@ module.exports = function Locator(Queen, Cache){
     globOptions.realpath = true;
     glob(["*/", "*.js"], globOptions, function(error, droneMinds){
       if(error){
-        Queen.log("an error occured building cache", error);
+        loc.log("an error occured building cache", error);
         throw error;
         return false;
       }

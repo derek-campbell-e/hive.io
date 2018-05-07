@@ -228,12 +228,18 @@ module.exports = function Queen(Hive, Bees){
       let func = queen[funcName] || function(){};
       Hive.on(eventKey, func);
     }
+    locator.on('fileDidChange', function(file){
+      Hive.emit('reload');
+    });
   };
 
   // our initializer
   let init = function(){
     bind();
-    queen.buildCache(queen.loadStartupDrones);
+    queen.buildCache(function(){
+      locator.watchForFileChanges();
+      queen.loadStartupDrones();
+    });
     return queen;
   };
 
