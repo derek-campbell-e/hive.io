@@ -14,7 +14,7 @@ module.exports = function Socket(Hive, Server, Cli, HiveNetwork){
   // TODO: socket authentication middleware
 
   let socketAuthentication = function(socket, next){
-    return next();
+    //return next();
     let token = socket.handshake.query.token;
     Server.token.verify(token, function(error, data){
       if(!error){
@@ -26,7 +26,7 @@ module.exports = function Socket(Hive, Server, Cli, HiveNetwork){
   };
 
   let socketVerifyPerPacket = function(socket, packet, next){
-    return next();
+    //return next();
     Server.token.verify(socket[tokenSymbol], function(error, data){
       if(!error){
         return next();
@@ -112,7 +112,7 @@ module.exports = function Socket(Hive, Server, Cli, HiveNetwork){
 
   sm.linkHive = function(args, callback){
     sm.log(`linking ${args.host} to current hive`);
-    let socket = linker(args.host);
+    let socket = linker(args.host + `?token=${args.token}`);
     if(args.options.bi){
       socket.once('connect', function(){
         activeSockets[socket.id] = socket;

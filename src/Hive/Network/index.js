@@ -15,6 +15,12 @@ module.exports = function HiveNetwork(Hive){
         callback(linkID);
       });
     });
+    let connectionFailed = function(){
+      callback("a connection could not be made at this time");
+    };
+    socket.once('error', connectionFailed);
+    socket.once('disconnect', connectionFailed);
+    socket.once('connect_error', connectionFailed);
   };
 
   network.addHive = function(socket, HiveID, args){
@@ -35,9 +41,7 @@ module.exports = function HiveNetwork(Hive){
     return args.linkID;
   };
 
-  // TODO: find link with HiveID to remove
   network.removeHive = function(socket, HiveID){
-    
     let linkID = network.lookupByHiveID(HiveID);
     if(!linkID){
       return false;
@@ -51,7 +55,7 @@ module.exports = function HiveNetwork(Hive){
   network.unlinkHive = function(args, callback){
     if(args.options.all){
       callback("closing...");
-      return network.gc();
+      return network.closeAllLinks();
     }
     if(!args.hostOrID){
       return callback("must provide either a host or linkID OR use -a for all");
@@ -125,11 +129,15 @@ module.exports = function HiveNetwork(Hive){
     return json;
   };
 
-  network.gc = function(){
+  network.closeAllLinks = function(){
     for(let linkID in links){
       let link = links[linkID];
       link.socket.close();
     }
+  };
+
+  network.gc = function(){
+    network.closeAllLinks();
   };
 
 

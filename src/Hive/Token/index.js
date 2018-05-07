@@ -1,4 +1,4 @@
-module.exports = function TokenAuthentication(){
+module.exports = function TokenAuthentication(Hive){
   // our includes
   const debug = require('debug')('hive:token');
   const common = require('../../Common');
@@ -7,7 +7,7 @@ module.exports = function TokenAuthentication(){
 
   // our token module
   let token = common.object('hive', 'token-auth');
-  token.log("initialized");
+  
 
   // create a token with data
   token.create = function(data, callback){
@@ -31,12 +31,31 @@ module.exports = function TokenAuthentication(){
     let error = null;
     let token = null;
     try {
-      token = jwt.sign({data: 'hive-daemon'}, secret, {expiresIn: 60 * 60});
+      token = jwt.sign({data: 'hive-daemon'}, secret);
     } catch(e) {
       error = e;
     }
     callback(error, token);
   };
 
-  return token;
+  token.generate = function(args, callback){
+    token.forever(function(error, token){
+      if(error){
+        return callback("no token able to be issued");
+      }
+      callback(token);
+    })
+  };
+
+  let bind = function(){
+    Hive.on('token:generate', token.generate);
+  };
+
+  let init = function(){
+    bind();
+    token.log("initialized");
+    return token;
+  };
+
+  return init();
 };

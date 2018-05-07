@@ -124,8 +124,15 @@ module.exports = function CLI(Hive, Options){
     .action(functions.replicateIntoHive);
 
   vorpal
-    .command("link <host>")
+    .command("token")
+    .description("generates a forever-token to connect instances")
+    .action(functions.emitter('token:generate'));
+
+  vorpal
+    .command("link <host> <token>")
     .description("link this hive to another hive instance")
+    .option('-s, --slave', 'make THIS hive instance the slave to linked hive')
+    .option('-m, --master', 'make THIS hive instance the master to linked hive')
     .option('-b, --bi', 'use this flag for bi-directional communication, default is one-way [linkee blasts to linked only]')
     .action(functions.emitter('link:hive'));
   
@@ -144,7 +151,7 @@ module.exports = function CLI(Hive, Options){
   vorpal
     .command("blast <event> [args...]")
     .description("blast a message from this hive to all hives connected")
-    .action(functions.emitter('blast:message'))
+    .action(functions.emitter('blast:message'));
   
   vorpal.find("exit").remove();
 

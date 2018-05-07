@@ -12,7 +12,7 @@ module.exports = function Hive(Options){
 
   let network = require('./Network')(hive);
 
-  hive.token = require('./Token')();
+  hive.token = require('./Token')(hive);
   
   hive.options = options;
   hive.meta.port = options.port;

@@ -136,7 +136,14 @@ module.exports = function Drone(Hive, Mind){
           meta.next = ['indeterminate'];
         break;
         default:
-          let occur = later.schedule(schedule.parsed).next(args.number);
+          let occur = null;
+          try {
+            occur = later.schedule(schedule.parsed).next(args.number);
+          } catch (error){
+            drone.log("an error occured parsing occurences", error);
+            continue;
+          }
+
           if(!Array.isArray(occur)){
             occur = [occur];
           }
