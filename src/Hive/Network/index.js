@@ -7,14 +7,16 @@ module.exports = function HiveNetwork(Hive){
   let links = {};
 
   network.addHiveRoutine = function(args, socket, callback){
+
     socket.once('connect', function(){
       let linkID = common.uuid();
       args.linkID = linkID;
       socket.emit("begin:link", Hive.meta.id, args, function(HiveID){
-        network.addHive(socket, HiveID, args);
+        network.addHive(socket, HiveID, args, {local: true});
         callback(linkID);
       });
     });
+
     let connectionFailed = function(){
       callback("a connection could not be made at this time");
     };
@@ -23,30 +25,81 @@ module.exports = function HiveNetwork(Hive){
     socket.once('connect_error', connectionFailed);
   };
 
-  network.addHive = function(socket, HiveID, args){
-    network.log("adding a hive to our network");
-    socket.once('reconnect_failed', function(){
-      console.log("DISCONNECETEDDDDDD");
-    });
-    socket.once('disconnect', network.removeHive.bind(network, socket, HiveID));
-    
-    links[args.linkID] = {
-      caller: args.caller,
-      callee: args.callee || HiveID,
-      host: args.host,
-      socket: socket,
-      bidirectional: args.options.bi || false
+  network.processReplication = function(link, HiveID, args, localize){
+    let replicationRoutine = function(){
+      let repl = function(Hive, Link){
+        let replicator = require('../Replicate')(Hive, link.socket, false);
+        replicator.commenceReplication({}, function(){});
+      }.bind(this, Hive, link);
+      Hive.on('reload', repl);
+      link.socket.once('disconnect', function(){
+        Hive.removeListener('reload', repl);
+      });
+      repl();
     };
+
+    if(args.options.slave){
+      if(localize.local){
+        link.replication = {
+          master: HiveID,
+          slave: Hive.meta.id
+        };
+      } else {
+        link.replication = {
+          master: Hive.meta.id,
+          slave: HiveID
+        };
+        replicationRoutine();
+      }
+    }
+
+    if(args.options.master){
+      if(localize.local){
+        link.replication = {
+          master: Hive.meta.id,
+          slave: HiveID
+        };
+        
+       replicationRoutine();
+        
+      } else {
+        link.replication = {
+          master: HiveID,
+          slave: Hive.meta.id
+        };
+      }
+    }
+
+  };
+
+  network.addHive = function(socket, HiveID, args, localize){
+    network.log("adding a hive to our network");
+   
+    socket.once('disconnect', network.removeHive.bind(network, socket, HiveID));
+
+    let link = {};
+    link.caller = args.caller;
+    link.callee = args.callee || HiveID;
+    link.host = args.host;
+    link.socket = socket;
+    link.bidirectional = args.options.bi || false;
+    link.replication = null;
+
+    
+    network.processReplication(link, HiveID,  args, localize);
+
+    links[args.linkID] = link;
 
     return args.linkID;
   };
 
-  network.removeHive = function(socket, HiveID){
+  network.removeHive = function(socket, HiveID, reason){
+
     let linkID = network.lookupByHiveID(HiveID);
     if(!linkID){
       return false;
     }
-    network.log("unlinking hive with id", HiveID);
+    network.log("unlinking hive with id", HiveID, reason);
     links[linkID] = null;
     delete links[linkID];
   };
@@ -75,11 +128,11 @@ module.exports = function HiveNetwork(Hive){
       let link = links[linkID];
       let socket = link.socket;
       if (link.bidirectional || link.caller === Hive.meta.id){
-        let hiveID = link.callee;
+        let HiveID = link.callee;
         if(link.host !== 'SELF'){
-          hiveID = link.caller;
+          HiveID = link.caller;
         }
-        network.log("attempting to blast to link", linkID, 'connected to hive:', hiveID);
+        network.log("attempting to blast to link", linkID, 'connected to hive:', HiveID);
         socket.emit.apply(socket, ['network:blast', args.event, args]);
       } else {
         network.log("networked hive not bidirectional, cannot blast to")
@@ -108,11 +161,11 @@ module.exports = function HiveNetwork(Hive){
     return false;
   };
 
-  network.lookupByHiveID = function(hiveID){
+  network.lookupByHiveID = function(HiveID){
     for(let linkID in links){
       let link = links[linkID];
       let needleHiveID = (link.host === 'SELF') ? link.caller : link.callee;
-      if (needleHiveID === hiveID){
+      if (needleHiveID === HiveID){
         return linkID
       }
     }
@@ -123,7 +176,7 @@ module.exports = function HiveNetwork(Hive){
     let json = {};
     for(let linkID in links){
       let link = links[linkID];
-      json[linkID] = {host: link.host, bidirectional: link.bidirectional, caller: link.caller, callee: link.callee};
+      json[linkID] = {host: link.host, bidirectional: link.bidirectional, caller: link.caller, callee: link.callee, replication: link.replication};
     }
     callback(json);
     return json;

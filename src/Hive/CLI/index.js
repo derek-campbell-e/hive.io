@@ -129,7 +129,7 @@ module.exports = function CLI(Hive, Options){
     .action(functions.emitter('token:generate'));
 
   vorpal
-    .command("link <host> <token>")
+    .command("link <host> [token]")
     .description("link this hive to another hive instance")
     .option('-s, --slave', 'make THIS hive instance the slave to linked hive')
     .option('-m, --master', 'make THIS hive instance the master to linked hive')
@@ -140,7 +140,6 @@ module.exports = function CLI(Hive, Options){
     .command("unlink [hostOrID]")
     .description("unlink this hive to another hive instance")
     .option('-a, --all', 'unlink all linked hives')
-    .option('-b, --bi', 'use this flag for bi-directional communication, default is one-way [linkee blasts to linked only]')
     .action(functions.emitter('unlink:hive'));
   
   vorpal

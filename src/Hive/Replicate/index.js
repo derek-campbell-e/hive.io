@@ -1,4 +1,8 @@
-module.exports = function Replicator(Hive, Socket){
+module.exports = function Replicator(Hive, Socket, AutoClose){
+  if(typeof AutoClose === 'undefined'){
+    AutoClose = true;
+  }
+
   // our includes
   const debug = require('debug')('hive:replicate');
   const common = require('../../Common');
@@ -29,8 +33,9 @@ module.exports = function Replicator(Hive, Socket){
 
   // our function to emit to remote hive that we are ready to begin replication
   repl.prepareLocalAndRemote = function(args, callback){
-    Socket.on("complete:replication", repl.completeReplication.bind(repl, args, callback));
-    Socket.on("ready:replication", repl.startReplication.bind(repl, args, callback));
+    Socket.once("complete:replication", repl.completeReplication.bind(repl, args, callback));
+    Socket.once("ready:replication", repl.startReplication.bind(repl, args, callback));
+    repl.log("telling remote host that we are ready");
     Socket.emit("begin:replication");
   };
 
@@ -48,9 +53,13 @@ module.exports = function Replicator(Hive, Socket){
   repl.completeReplication = function(args, callback){
     debug("we are done replicating so close the socket!");
     repl.log("replication is complete...");
+    callback("REPLICATION COMPLETED");
+    return;
     Socket.emit("remote:command", "reload", {}, function(){
       callback("REPLICATION COMPLETED");
-      Socket.close();
+      if(AutoClose){
+        Socket.close();
+      }
     });
   };
 
@@ -114,10 +123,21 @@ module.exports = function Replicator(Hive, Socket){
   // these functions are called by the hive instance that is receiving the replication data
   // called by remote hive after receiving assets data
   repl.replicateInto = function(assets, callback){
+    Hive.meta.isInReplication = true;
+    repl.log("replicating data into current hive...");
     let folders = assets.dirs;
+    repl.log("creatiing folders")
     repl.createFolders(folders, function(){
+      repl.log('installing dependencies');
       repl.createFiles(assets.files, function(){
-        repl.installDependencies(folders, callback);
+        repl.installDependencies(folders, function(){
+          repl.log('finished replication!');
+          Hive.emit('reload');
+          setTimeout(function(){
+            Hive.meta.isInReplication = false;
+            callback();
+          }, 1000 * 2);
+        });
       });
     });
   };
@@ -166,7 +186,6 @@ module.exports = function Replicator(Hive, Socket){
   // called by remote hive to install dependencies for each folder
   repl.installDependencies = function(folders, callback){
     const child_process = require('child_process');
-    const stringArgv = require('string-argv');
     let basePath = Hive.options.droneFolder;
     let foldersCopy = [...folders];
     let loop = function(){

@@ -16,6 +16,8 @@ module.exports = function Hive(Options){
   
   hive.options = options;
   hive.meta.port = options.port;
+
+  hive.meta.isInReplication = false;
   
   
   let remoteManager = require('./Remote')(hive);

@@ -172,6 +172,7 @@ module.exports = function Queen(Hive, Bees){
     callback = callback || function(){};
     //console.log(this, cli);
     queen.rebuildCache();
+    Hive.log("we are reloading...");
     Hive.cli.log('reloading...');
     callback();
   };
@@ -229,6 +230,9 @@ module.exports = function Queen(Hive, Bees){
       Hive.on(eventKey, func);
     }
     locator.on('fileDidChange', function(file){
+      if(Hive.meta.isInReplication){
+        return;
+      }
       Hive.emit('reload');
     });
   };
