@@ -195,18 +195,15 @@ module.exports = function Queen(Hive, Bees){
   };
 
   queen.showLogs = function(args, callback){
-    let logParser = require('./logParser');
-    logParser(options.logs.stdout, args, callback);
+    common.logParser(options.logs.stdout, args, callback);
   };
 
   queen.showErrors = function(args, callback){
-    let logParser = require('./logParser');
-    logParser(options.logs.stderr, args, callback);
+    common.logParser(options.logs.stderr, args, callback);
   };
 
   queen.showResults = function(args, callback){
-    let logParser = require('./logParser');
-    logParser(options.logs.results, args, callback);
+    common.logParser(options.logs.results, args, callback);
   };
 
   queen.retireHive = function(args, callback){

@@ -28,6 +28,7 @@ module.exports = function CLI(Hive, Options){
   
   vorpal
     .command("stats")
+    .alias('ps')
     .action(functions.emitter('stats'));
 
   vorpal
